@@ -37,8 +37,9 @@ ___
 #### 
 
 ### 환경변수 설명
-  - `.env` <- Local 전용
-  - `.env.production` <- 배포 전용
+  - `.env` <- Local Test ( with local backend )
+  - `.env.production` <- Local Test ( with hosted backend )
+  - `github에 "Actions secrets and variables"` <- AWS S3 버킷 업로드 코드 ( with hosted backend )
 
 ### Library 설치
 ```bash
@@ -66,7 +67,7 @@ $ npm run build
 
 ### Local Test ( with hosted backend )
 ```bash
-$ npm install -g serve
+$ npm install -g serve  # serve 패키지를 전역(global)설치 <- 한번만 하면 됨
 $ serve -s build  # localhost:3000 으로 서버구성해서 build 디렉토리에 있는 코드 로컬실행
 ```
 
@@ -104,6 +105,7 @@ ___
 ### AWS S3 업로드
   - `https://eu-north-1.console.aws.amazon.com/s3/home?region=eu-north-1#` 
   - 해당링크에서 APP 전용 도메인 버킷에 업로드
+  - FrontEndProd에 `Release_v*.*` 커밋명으로 푸시 ( Git Action -> IAM 자동 업로드 )
 
 ___
 
