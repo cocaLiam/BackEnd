@@ -190,7 +190,8 @@ const getUserInfo = async (req, res, next) => {
   let existingUser;
   /** DB 찾기 에러 */
   try {
-    existingUser = await dbUtils.findOneByField(UserData, "user_email", userEmail)
+    existingUser = await dbUtils.findOneByFieldWithoutPassword(UserData, "user_email", userEmail)
+    log.notice(existingUser)
     //# DB 상에 해당 Email 이 없으면 existingUser 이 null 값
 
     /** 일치하는 Email이 없는 경우 */
@@ -199,13 +200,15 @@ const getUserInfo = async (req, res, next) => {
         "Email 이 존재하지 않습니다.", 404
       ));
     }
+
   } catch (err) {
     return next(new HttpError(
       '로그인 할 수 없습니다. [ 서버 에러 : DB query ] ', 500
     ));
   }
 
-  res.json({ userInfo: existingUser });
+    // 클라이언트에 password 제외한 정보 반환
+    res.json({ userInfo:existingUser }); // userInfo 변수를 반환
 }
 
 

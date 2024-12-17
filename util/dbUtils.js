@@ -17,6 +17,23 @@ const findOneByField = async (targetTable, field, value) => {
   }
 };
 
+// 비밀번호필드를 제외한 디바이스 단일 조회 함수
+const findOneByFieldWithoutPassword = async (targetTable, field, value) => {
+  try {
+    const query = {};
+    query[field] = value;
+    const result = await targetTable.findOne(query, "-password");
+    if (!result) {
+      throw new HttpError(
+        `DB에 ${field} : ${value}가 없습니다. `, 404
+      );
+    }
+    return result;
+  } catch (error) {
+    throw new HttpError(`디바이스 조회 중 오류 발생:', ${error} `, 500);
+  }
+};
+
 // 디바이스 복수 조회 함수
 const findAllByField = async (targetTable, field, value) => {
   try {
@@ -84,6 +101,7 @@ const updateByField = async (targetTable, field, value, updateData) => {
 };
 
 exports.findOneByField = findOneByField
+exports.findOneByFieldWithoutPassword = findOneByFieldWithoutPassword
 exports.findAllByField = findAllByField
 exports.deleteByField = deleteByField
 exports.createCollection = createCollection
