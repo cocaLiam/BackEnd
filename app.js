@@ -1,22 +1,22 @@
-const fs = require('fs');
-const path = require('path');
+// const fs = require('fs');
+// const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 
-const placesRoutes = require('./routes/places-routes');
+// const placesRoutes = require('./routes/places-routes');
 const usersRoutes = require('./routes/users-routes');
+const deviceRoutes = require('./routes/devices-routes');
 const HttpError = require('./models/http-error');
 const log = require("./util/logger");
 
 const app = express();
 
 // app.use(bodyParser.urlencoded());  // Form Data 전용 : HTML 폼 ( ex) name=John&age=30 )
-// app.use(bodyParser.json());        // Json Data 전용 : JSON 형식 ( ex) {"name": "John", "age": 30} )
-app.use(bodyParser.json());
+app.use(bodyParser.json());           // Json Data 전용 : JSON 형식 ( ex) {"name": "John", "age": 30} )
 
-app.use(process.env.API_UPLOAD_IMAGES, express.static(path.join('uploads', 'images')));
-// uploads/images 라는 경로에 있는 파일들을 반환가능하게 함
+// app.use(process.env.API_UPLOAD_IMAGES, express.static(path.join('uploads', 'images')));
+// // uploads/images 라는 경로에 있는 파일들을 반환가능하게 함
 
 app.use((req, res, next) => {
   // 모든 도메인에서 이 서버에 접근할 수 있도록 허용합니다.
@@ -35,8 +35,8 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(process.env.API_PLACES_ROUTER, placesRoutes);  // /api/places/...   인 경우만 Routing 하도록 지정
 app.use(process.env.API_USERS_ROUTER, usersRoutes);
+app.use(process.env.API_DEVICE_ROUTER, deviceRoutes); 
 
 app.use((req, res, next) => {
   /**
@@ -50,14 +50,13 @@ app.use((req, res, next) => {
 
 app.use((error, req, res, next) => {
   if (req.file) {
-    log.notice(`삭제할 Image info : `);
     console.dir(req.file.originalname);
     console.dir(req.file.destination);
-    console.dir(req.file.path);
-    fs.unlink(req.file.path, err => {
-      // err && log.error(`unlink error ${err}`); // err이 null이 아니면 출력
-      err ? log.error(`파일 삭제 error ${err}`) : log.info("파일 삭제 완료");
-    })
+    // console.dir(req.file.path);
+    // fs.unlink(req.file.path, err => {
+    //   // err && log.error(`unlink error ${err}`); // err이 null이 아니면 출력
+    //   err ? log.error(`파일 삭제 error ${err}`) : log.info("파일 삭제 완료");
+    // })
   }
   if (res.headerSent) {  //응답과 연결된 헤더가 이미 전송된 상태인지 확인하는 프러파티 이다.
     return next(error);
@@ -68,17 +67,15 @@ app.use((error, req, res, next) => {
 });
 
 
-// const url =
-//   `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_CLUSTER}.m0cno.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
-// log.debug(url);
-const url =
-  `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_CLUSTER}.lnm6y.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
+const url = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_CLUSTER}.idx4l.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority&appName=dev-cluster`;
+
+// mongoose.set('debug', true);
 
 mongoose
   .connect(url)
   .then(() => {
-    log.info(`Connected to DB, port : ${process.env.PORT || process.env.DB_PORT_NUMBER}`);
-    app.listen(Number(process.env.PORT || process.env.DB_PORT_NUMBER));
+    log.info(`BACKEND PORT : ${process.env.BACKEND_PORT}`);
+    app.listen(Number(process.env.BACKEND_PORT));
   })
   .catch(error => {
     log.error("Connection Error");

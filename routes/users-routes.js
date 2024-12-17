@@ -2,27 +2,60 @@ const express = require("express");
 const { check } = require("express-validator");
 
 const usersControllers = require('../controllers/users-controllers');
-const fileUpload = require("../middleware/file-upload")
+const checkAuth = require("../middleware/check-auth");
+
 const { log, checkProps} = require("../util/codeHelperUtils")
 
 const router = express.Router();
 
-// app.use('/api/places', placesRoutes);  // /api/places/...   인 경우만 Routing 하도록 지정
-router.get(process.env.API_USERS_ROOT, usersControllers.getUsers);
+// // app.use('/api/places', placesRoutes);  // /api/places/...   인 경우만 Routing 하도록 지정
+// router.get(process.env.API_USERS_ROOT, usersControllers.getUsers);
 
+// 인증이 필요 없는 라우트
 router.post(
   process.env.API_USERS_SIGNUP,
-  fileUpload.single('image'),
   [
-    check('name').not().isEmpty(),
-    check('email')
+    check('userName').not().isEmpty(),
+    check('userEmail')
       .normalizeEmail()   // Test@test.com => test@test.com
       .isEmail(),         //  @xxx.xxx 유무
-    check('password').isLength({ min: 6 })
+    check('password').isLength({ min: 6 }),
+    check('homeAddress'),
+    check('phoneNumber'),
   ],
-  usersControllers.signup);
-  
-router.post(process.env.API_USERS_LOGIN, usersControllers.login);
+  usersControllers.signup
+);
+
+router.post(process.env.API_USERS_LOGIN, 
+  [
+    check('userEmail').not().isEmpty(),
+    check('password').not().isEmpty(),
+  ]
+  ,usersControllers.login);
+
+// 인증 미들웨어를 적용
+router.use(checkAuth);
+
+// 인증이 필요한 라우트
+router.get(process.env.API_USERS_INFO, 
+  [
+    check('userEmail').not().isEmpty(),
+  ],
+  usersControllers.getUserInfo);
+
+router.patch(process.env.API_USERS_UPDATE, 
+  [
+    check('userName').not().isEmpty(),
+    check('userEmail')
+      .normalizeEmail()   // Test@test.com => test@test.com
+      .isEmail(),         //  @xxx.xxx 유무
+    check('password').isLength({ min: 6 }),
+    check('homeAddress'),
+    check('phoneNumber'),
+  ]
+  ,usersControllers.updateUserInfo);
+
+
 /** 
  * get 이고 post 고 patch, delete 고 기능이 있거나 한 건 아님.
  * 해당 Callback 함수에 구현된 Code 가 전부임

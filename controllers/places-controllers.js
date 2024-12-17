@@ -295,7 +295,6 @@ const deletePlace = async (req, res, next) => {
   res.status(200).json({ message: "장소가 삭제되었습니다." });
 }
 
-// module.exports ??여러개는 어떻게?
 exports.getPlaceById = getPlaceById;
 exports.getPlacesByUserId = getPlacesByUserId;
 exports.createPlace = createPlace;
