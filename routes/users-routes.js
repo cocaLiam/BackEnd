@@ -13,7 +13,7 @@ const router = express.Router();
 
 // 인증이 필요 없는 라우트
 router.post(
-  process.env.API_USERS_SIGNUP,
+  process.env.API_USER_SIGNUP,
   [
     check('userName').not().isEmpty(),
     check('userEmail')
@@ -26,32 +26,38 @@ router.post(
   usersControllers.signup
 );
 
-router.post(process.env.API_USERS_LOGIN, 
+router.post(process.env.API_USER_LOGIN, 
   [
     check('userEmail').not().isEmpty(),
     check('password').not().isEmpty(),
-  ]
-  ,usersControllers.login);
+  ],
+  usersControllers.login);
 
 // 인증 미들웨어를 적용
 router.use(checkAuth);
+// ↓↓↓↓↓↓↓↓ 인증이 필요한 라우트 ↓↓↓↓↓↓↓↓
 
-// 인증이 필요한 라우트
-router.get(process.env.API_USERS_INFO, 
+router.post(process.env.API_USER_REFRESH_TOKEN,
+  [
+    check('dbObjectId').not().isEmpty(),
+  ],
+  usersControllers.refreshToken);
+
+router.get(process.env.API_USER_INFO, 
   [
     check('userEmail').not().isEmpty(),
   ],
   usersControllers.getUserInfo);
 
-router.patch(process.env.API_USERS_UPDATE, 
+router.patch(process.env.API_USER_UPDATE, 
   [
     check('userName').not().isEmpty(),
     check('userEmail')
       .normalizeEmail()   // Test@test.com => test@test.com
       .isEmail(),         //  @xxx.xxx 유무
     check('password').isLength({ min: 6 }),
-    check('homeAddress'),
-    check('phoneNumber'),
+    check('homeAddress').not().isEmpty(),
+    check('phoneNumber').not().isEmpty(),
   ]
   ,usersControllers.updateUserInfo);
 

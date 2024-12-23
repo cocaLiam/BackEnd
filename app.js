@@ -35,7 +35,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(process.env.API_USERS_ROUTER, usersRoutes);
+app.use(process.env.API_USER_ROUTER, usersRoutes);
 app.use(process.env.API_DEVICE_ROUTER, deviceRoutes); 
 
 app.use((req, res, next) => {

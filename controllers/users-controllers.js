@@ -7,6 +7,7 @@ const UserData = require('../models/users_data');
 
 const log = require('../util/logger');
 const dbUtils = require('../util/dbUtils');
+const ValidationError = require('mongoose/lib/error/validation');
 
 // const getUsers = async (req, res, next) => {
 //   let users;
@@ -21,11 +22,22 @@ const dbUtils = require('../util/dbUtils');
 //   res.json({ users: users.map(user => user.toObject({ getters: true })) });
 // };
 
+function debugReqConsolePrint(req){
+  console.log('=== DEBUG START ===');
+  console.log('1. Raw req.body:', req.body);
+  console.log('2. req.body type:', typeof req.body);
+  console.log('3. req.body keys:', Object.keys(req.body));
+  console.log('4. stringified body:', JSON.stringify(req.body));
+  console.log('5. dbObjectId:', req.body?.dbObjectId);
+  console.log('=== DEBUG END ===');
+}
 const signup = async (req, res, next) => {
   /** users-routes.js 에서 검사한 Name email password 의 밸리데이션 체크*/
+  log.notice("signup !");
+  // debugReqConsolePrint(req);
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    log.error(errors);
+    log.error(`사용자 입력값 Validation Error : ${req.body}`);
     res.status(422);
     return next(
       new HttpError('사용자 입력값 유효하지 않음\n 비밀번호 6글자 이상', 422)
@@ -42,7 +54,7 @@ const signup = async (req, res, next) => {
 
     /** 일치하는 Email이 없는 경우 */
     if (existingUser) {
-      log.error(existingUser);
+      log.error(`ID 중복 에러 : ${existingUser}`);
       return next(new HttpError(
         "이미 있는 ID 에 중복가입 에러", 409
       ));
@@ -75,7 +87,6 @@ const signup = async (req, res, next) => {
   /** 회원 정보 DB Create*/
   try {
     await createdUser.save();
-    log.debug(`signup 회원가입 완료 >>\n ${createdUser}`)
   } catch (err) {
     return next(new HttpError(
       `Sighing Up failed, please try again ${err}`, 500
@@ -85,15 +96,15 @@ const signup = async (req, res, next) => {
   /** JWT 토큰 발행 */
   let token;
   try {
-    const oneHour = 1000 * 60 * 60;
+    const oneHour = 60 * 60;
+    const halfOneHour = 60 * 30;
     token = jwt.sign(
       {
         dbObjectId: createdUser.id,
-        userEmail: createdUser.user_email,
-        expireTime: oneHour
+        userEmail: createdUser.user_email
       },
       process.env.JWT_PRIVATE_KEY,
-      { expiresIn: oneHour }
+      { expiresIn: halfOneHour }
     );
   } catch (err) {
     return next(new HttpError(
@@ -107,7 +118,7 @@ const signup = async (req, res, next) => {
     .status(201)
     .json({
       dbObjectId: createdUser.id,
-      userEmail: createdUser.user_email,
+      emailVerified: true,
       token: token
     });
 };
@@ -155,15 +166,15 @@ const login = async (req, res, next) => {
   /** JWT 토큰 발행 */
   let token;
   try {
-    const oneHour = 1000 * 60 * 60;
+    const oneHour = 60 * 60;
+    const halfOneHour = 60 * 30;
     token = jwt.sign(
       {
         dbObjectId: existingUser.id,
-        user_email: existingUser.user_email,
-        expireTime: oneHour
+        userEmail : existingUser.user_email
       },
       process.env.JWT_PRIVATE_KEY,
-      { expiresIn: oneHour }
+      { expiresIn: halfOneHour }
     );
   } catch (err) {
     log.error(err);
@@ -179,10 +190,48 @@ const login = async (req, res, next) => {
   // });
   res.json({
     dbObjectId: existingUser.id,
-    userEmail: existingUser.user_email,
     token: token
   });
 };
+
+const refreshToken = async (req, res, next) => {
+  try {
+    // const deviceOwner = req.params.dbObjectId; // 사용자 ID
+
+    // req.userData는 checkAuth 미들웨어에서 이미 설정됨
+    const dbObjectId = req.tokenData.dbObjectId;
+    const userEmail = req.tokenData.userEmail;
+    // debugReqConsolePrint(req);
+    if (dbObjectId != req.body.dbObjectId){
+      log.error(`uid 와 Token의 uid 가 다름`);
+      log.error("",req.body);
+      log.error("req.body.dbObjectId : ",req.body.dbObjectId);
+      log.error("req.tokenData.dbObjectId : ",req.tokenData.dbObjectId);
+      throw ValidationError;
+    }
+
+    // 새로운 액세스 토큰 발급
+    const oneHour = 60 * 60;
+    const halfOneHour = 60 * 30;
+    const newToken = jwt.sign(
+      {
+        dbObjectId,
+        userEmail 
+      },
+      process.env.JWT_PRIVATE_KEY,
+      { expiresIn: halfOneHour }
+    );
+
+    res.json({
+      message: '토큰이 갱신되었습니다.',
+      newToken: newToken
+    });
+
+  } catch (err) {
+    return next(new HttpError('토큰 갱신 중 오류가 발생했습니다.', 500));
+  }
+};
+
 
 const getUserInfo = async (req, res, next) => {
   const { userEmail } = req.body;
@@ -261,3 +310,4 @@ exports.signup = signup;
 exports.login = login;
 exports.getUserInfo = getUserInfo;
 exports.updateUserInfo = updateUserInfo;
+exports.refreshToken = refreshToken;

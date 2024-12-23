@@ -13,7 +13,7 @@ const findOneByField = async (targetTable, field, value) => {
     }
     return result;
   } catch (error) {
-    throw new HttpError(`디바이스 조회 중 오류 발생:', ${error} `, 500);
+    return "";
   }
 };
 
