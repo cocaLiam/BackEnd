@@ -22,7 +22,7 @@ module.exports = (req, res, next) => {
     // Authorization: 'Bearer TOKEN' <- [0] = Bearer , [1] = TOKEN
     if (!token) {
       return next(new HttpError(
-        "Authentication filed! [ TOKEN 정보 없음 ]", 400)
+        "Authentication filed! [ TOKEN 정보 없음 ]", 401)
       );
     }
 
@@ -49,6 +49,6 @@ module.exports = (req, res, next) => {
       return next(new HttpError("토큰 유효 시간 종료", 401));
     }
     log.warn(`Token 인증 실패 ${err}`);
-    return next(new HttpError("Authentication failed!", 403));
+    return next(new HttpError("Authentication failed!", 401));
   }
 }

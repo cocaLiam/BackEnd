@@ -160,7 +160,7 @@ const updatePlace = async (req, res, next) => {
   if (dbPlaceCollectionData.creator.toString() !== req.userData.userId) {
     const error = new HttpError(
       '수정 권한 없음 에러 .',
-      401
+      403
     );
     return next(error);
   }
@@ -265,7 +265,7 @@ const deletePlace = async (req, res, next) => {
   }
 
   if (place.creator._id.toString() !== req.userData.userId){
-    return next( new HttpError("삭제 권한 없음 에러 "),401);
+    return next( new HttpError("삭제 권한 없음 에러 "),403);
   }
 
   /* DB에 있는 place collection 삭제 */

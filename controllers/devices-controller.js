@@ -16,11 +16,15 @@ const getDeviceList = async (req, res, next) => {
   const deviceList = await dbUtils.findAllByField(DeviceInfo, "device_owner", deviceOwner);
   log.notice(`Device List: ${JSON.stringify(deviceList)}`);
 
-  // 배열의 각 요소에 대해 toObject 호출 (Mongoose 문서일 경우)
+  if(!deviceList){
+    return next(new HttpError("해당 dbObjectId에 등록된 Device가 없습니다.", 204));
+  }
+
+   // 배열의 각 요소에 대해 toObject 호출 (Mongoose 문서일 경우)
   const deviceListObjects = deviceList.map(device => device.toObject({ getters: true }));
 
   // 클라이언트로 JSON 응답
-  res.json({ device_list: deviceListObjects });
+  res.json({ device_list: deviceListObjects }); 
 
   // res.json({ device_list: deviceList.toObject({ getters: true }) });
 };
@@ -52,7 +56,7 @@ const createDeviceInfo = async (req, res, next) => {
       // UserData에서 사용자 조회 (트랜잭션 사용)
       const user = await UserData.findById(deviceOwner).session(session);
       if (!user) {
-        throw new HttpError("사용자를 찾을 수 없습니다.", 404);
+        return next(new HttpError("사용자를 찾을 수 없습니다.", 404));
       }
 
       // UserData의 device_list에서 삭제된 디바이스의 _id 제거
@@ -66,7 +70,7 @@ const createDeviceInfo = async (req, res, next) => {
       // DeviceInfo에서 디바이스 삭제
       const result = await DeviceInfo.deleteOne({ _id: existingDevice._id }).session(session);
       if (result.deletedCount === 0) {
-        throw new HttpError("기존 디바이스 삭제 중 오류가 발생했습니다.", 500);
+        return next(new HttpError("기존 디바이스 삭제 중 오류가 발생했습니다.", 500));
       }
     }
 
@@ -86,7 +90,7 @@ const createDeviceInfo = async (req, res, next) => {
     // 6. UserData에서 사용자 조회 (트랜잭션 사용)
     const user = await UserData.findById(deviceOwner).session(session);
     if (!user) {
-      throw new HttpError("사용자를 찾을 수 없습니다.", 404);
+      return next(new HttpError("사용자를 찾을 수 없습니다.", 404));
     }
 
     // 7. UserData의 device_list에 새 디바이스의 _id 추가

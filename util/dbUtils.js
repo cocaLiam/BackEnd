@@ -13,7 +13,7 @@ const findOneByField = async (targetTable, field, value) => {
     }
     return result;
   } catch (error) {
-    return "";
+    return false;
   }
 };
 
@@ -30,7 +30,8 @@ const findOneByFieldWithoutPassword = async (targetTable, field, value) => {
     }
     return result;
   } catch (error) {
-    throw new HttpError(`디바이스 조회 중 오류 발생:', ${error} `, 500);
+    return false;
+    // throw new HttpError(`디바이스 조회 중 오류 발생:', ${error} `, 500);
   }
 };
 
@@ -47,7 +48,8 @@ const findAllByField = async (targetTable, field, value) => {
     }
     return result;  // 찾은 result 하나도 없으면 빈 [] 을 리턴
   } catch (error) {
-    throw new HttpError(`디바이스 조회 중 오류 발생:', ${error} `, 500);
+    return false;
+    // throw new HttpError(`디바이스 조회 중 오류 발생:', ${error} `, 500);
   }
 };
 
