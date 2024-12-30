@@ -8,7 +8,6 @@ const placeSchema = new Schema({
   device_owner  : { type: mongoose.Types.ObjectId, required: true, ref: 'UserData' },   // User.js 의존성생성 (외래키 개념)
   mac_address   : { type: String, required: true },
   device_name   : { type: String, required: true },
-  device_type   : { type: String, required: true },
   battery       : { type: String, required: true },
 });
 

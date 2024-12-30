@@ -31,7 +31,7 @@ const getDeviceList = async (req, res, next) => {
 
 const createDeviceInfo = async (req, res, next) => {
   const deviceOwner = req.params.uid; // 사용자 ID
-  const { macAddress, deviceName, deviceType, battery } = req.body;
+  const { macAddress, deviceName, battery } = req.body;
 
   // MongoDB 세션 시작
   const session = await mongoose.startSession();
@@ -79,7 +79,6 @@ const createDeviceInfo = async (req, res, next) => {
       device_owner: deviceOwner,
       mac_address: macAddress,
       device_name: deviceName,
-      device_type: deviceType,
       battery: battery,
     };
 

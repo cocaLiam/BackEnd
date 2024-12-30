@@ -23,7 +23,6 @@ router.post(
   [  // 각각의 함수를 호출하며 next를 호출한다
     check('macAddress').not().isEmpty(),
     check('deviceName').not().isEmpty(),
-    check('deviceType').not().isEmpty(),
     check('battery').not().isEmpty(),
   ],
   deviceControllers.createDeviceInfo /* API 핸들러 << 
