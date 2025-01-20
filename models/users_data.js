@@ -11,7 +11,10 @@ const userSchema = new Schema({
   password      : { type: String, required: [true, '비밀번호는 필수입니다.'], minlength: 6 },
   home_address  : { type: String, required: [true, '주소는 필수입니다.'] },
   phone_number  : { type: String, required: [true, '전화번호는 필수입니다.'] },
-  device_list   : [{ type: mongoose.Types.ObjectId, required: true, ref: 'DeviceInfo' }]  // Place.js 의존성생성 (외래키 개념)
+  device_list   : [{ type: mongoose.Types.ObjectId, required: true, ref: 'DeviceInfo' }],  // Place.js 의존성생성 (외래키 개념)
+  // device_group_list  : [{ type: mongoose.Types.ObjectId, required: true, default: [mongoose.Types.ObjectId("default_group")] }]
+  // device_group_list  : [{ type: mongoose.Types.ObjectId, default: () => [mongoose.Types.ObjectId("default_group")] }],
+  device_group_list: { type: [String], default: ['default_group'] },
 });
 
 userSchema.plugin(uniqueValidator);

@@ -72,3 +72,4 @@ PATCH: 데이터를 부분적으로 수정할 때 사용
 DELETE: 데이터를 삭제할 때 사용
 */
 module.exports = router;
+

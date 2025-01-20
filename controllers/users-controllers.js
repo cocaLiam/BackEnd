@@ -22,6 +22,10 @@ const ValidationError = require('mongoose/lib/error/validation');
 //   res.json({ users: users.map(user => user.toObject({ getters: true })) });
 // };
 
+const HALF_ONE_MONTH = 60 * 60 * 24 * 15;
+const ONE_HOUR = 60 * 60;
+const HALF_ONE_HOUR = 60 * 30;
+
 function debugReqConsolePrint(req){
   console.log('=== DEBUG START ===');
   console.log('1. Raw req.body:', req.body);
@@ -96,15 +100,14 @@ const signup = async (req, res, next) => {
   /** JWT 토큰 발행 */
   let token;
   try {
-    const oneHour = 60 * 60;
-    const halfOneHour = 60 * 30;
+    
     token = jwt.sign(
       {
         dbObjectId: createdUser.id,
         userEmail: createdUser.user_email
       },
       process.env.JWT_PRIVATE_KEY,
-      { expiresIn: halfOneHour }
+      { expiresIn: HALF_ONE_MONTH }
     );
   } catch (err) {
     return next(new HttpError(
@@ -166,15 +169,13 @@ const login = async (req, res, next) => {
   /** JWT 토큰 발행 */
   let token;
   try {
-    const oneHour = 60 * 60;
-    const halfOneHour = 60 * 30;
     token = jwt.sign(
       {
         dbObjectId: existingUser.id,
         userEmail : existingUser.user_email
       },
       process.env.JWT_PRIVATE_KEY,
-      { expiresIn: halfOneHour }
+      { expiresIn: HALF_ONE_MONTH }
     );
   } catch (err) {
     log.error(err);
@@ -211,15 +212,13 @@ const refreshToken = async (req, res, next) => {
     }
 
     // 새로운 액세스 토큰 발급
-    const oneHour = 60 * 60;
-    const halfOneHour = 60 * 30;
     const newToken = jwt.sign(
       {
         dbObjectId,
         userEmail 
       },
       process.env.JWT_PRIVATE_KEY,
-      { expiresIn: halfOneHour }
+      { expiresIn: HALF_ONE_MONTH }
     );
 
     res.json({
