@@ -221,6 +221,8 @@ const refreshToken = async (req, res, next) => {
       { expiresIn: HALF_ONE_MONTH }
     );
 
+    log.notice(newToken);
+
     res.json({
       message: '토큰이 갱신되었습니다.',
       newToken: newToken
@@ -233,13 +235,13 @@ const refreshToken = async (req, res, next) => {
 
 
 const getUserInfo = async (req, res, next) => {
-  const { userEmail } = req.body;
+  const dbObjectId = req.tokenData.dbObjectId;
+  const userEmail = req.tokenData.userEmail;
 
   let existingUser;
   /** DB 찾기 에러 */
   try {
     existingUser = await dbUtils.findOneByFieldWithoutPassword(UserData, "user_email", userEmail)
-    log.notice(existingUser)
     //# DB 상에 해당 Email 이 없으면 existingUser 이 null 값
 
     /** 일치하는 Email이 없는 경우 */

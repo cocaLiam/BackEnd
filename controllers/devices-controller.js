@@ -30,13 +30,15 @@ const getDeviceList = async (req, res, next) => {
 
 const createDeviceInfo = async (req, res, next) => {
   const deviceOwner = req.params.uid; // 사용자 ID
-  const { macAddress, deviceName, battery } = req.body;
+  const { deviceGroup, macAddress, deviceName, battery } = req.body;
 
   // MongoDB 세션 시작
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
+    // 0. 추가하려는 Device 의 deviceGroup 이 해당 uid 와 매칭되는 유저의 device_group_list에 존재하는지 확인
+    
     // 1. 기존 디바이스 목록 조회
     const deviceList = await dbUtils.findAllByField(DeviceInfo, "device_owner", deviceOwner, session);
 
@@ -72,9 +74,11 @@ const createDeviceInfo = async (req, res, next) => {
       }
     }
 
+    
     // 4. 새 디바이스 데이터 생성
     const newDeviceData = {
       device_owner: deviceOwner,
+      device_group: deviceGroup || "default_group",
       mac_address: macAddress,
       device_name: deviceName,
       battery: battery,

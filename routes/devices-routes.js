@@ -21,6 +21,7 @@ router.get(process.env.API_DEVICE_LIST, deviceControllers.getDeviceList);
 router.post(
   process.env.API_DEVICE_CREATE,
   [  // 각각의 함수를 호출하며 next를 호출한다
+    check('deviceGroup').optional(), // deviceGroup이 비어 있어도 허용
     check('macAddress').not().isEmpty(),
     check('deviceName').not().isEmpty(),
     check('battery').not().isEmpty(),

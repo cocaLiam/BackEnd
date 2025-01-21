@@ -43,11 +43,12 @@ router.post(process.env.API_USER_REFRESH_TOKEN,
   ],
   usersControllers.refreshToken);
 
-router.get(process.env.API_USER_INFO, 
-  [
-    check('userEmail').not().isEmpty(),
-  ],
-  usersControllers.getUserInfo);
+router.get(process.env.API_USER_INFO, usersControllers.getUserInfo);
+// router.get(process.env.API_USER_INFO, 
+//   [
+//     check('userEmail').not().isEmpty(),
+//   ],
+//   usersControllers.getUserInfo);
 
 router.patch(process.env.API_USER_UPDATE, 
   [
