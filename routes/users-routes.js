@@ -37,28 +37,46 @@ router.post(process.env.API_USER_LOGIN,
 router.use(checkAuth);
 // ↓↓↓↓↓↓↓↓ 인증이 필요한 라우트 ↓↓↓↓↓↓↓↓
 
-router.post(process.env.API_USER_REFRESH_TOKEN,
-  [
-    check('dbObjectId').not().isEmpty(),
-  ],
-  usersControllers.refreshToken);
-
-router.get(process.env.API_USER_INFO, usersControllers.getUserInfo);
+router.get(process.env.API_USER_INFO, 
+  usersControllers.getUserInfo);
 // router.get(process.env.API_USER_INFO, 
 //   [
 //     check('userEmail').not().isEmpty(),
 //   ],
 //   usersControllers.getUserInfo);
 
+router.post(process.env.API_USER_REFRESH_TOKEN,
+  [
+    check('dbObjectId').not().isEmpty(),
+  ],
+  usersControllers.refreshToken);
+
+router.post(process.env.API_USER_GROUP_CREATE,
+  [
+    check('dbObjectId').not().isEmpty(),
+    check('createTargetGroupName').not().isEmpty(),
+  ],
+  usersControllers.createGroup);
+
+router.patch(process.env.API_USER_GROUP_UPDATE, 
+  [
+    check('dbObjectId').not().isEmpty(),
+    check('currentGroup').not().isEmpty(), // 업데이트 당할 그룹명
+    check('updateTargetGroupName').not().isEmpty(),  // 업데이트 할 그룹명
+  ]
+  ,usersControllers.updateGroup);
+
 router.patch(process.env.API_USER_UPDATE, 
   [
-    check('userName').not().isEmpty(),
+    check('dbObjectId').not().isEmpty(),
+    check('userName').optional(),
     check('userEmail')
       .normalizeEmail()   // Test@test.com => test@test.com
-      .isEmail(),         //  @xxx.xxx 유무
-    check('password').isLength({ min: 6 }),
-    check('homeAddress').not().isEmpty(),
-    check('phoneNumber').not().isEmpty(),
+      .isEmail()         //  @xxx.xxx 유무
+      .optional(),
+    check('password').isLength({ min: 6 }).not().isEmpty(),
+    check('homeAddress').not().optional(),
+    check('phoneNumber').not().optional(),
   ]
   ,usersControllers.updateUserInfo);
 

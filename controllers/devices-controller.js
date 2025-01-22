@@ -30,7 +30,8 @@ const getDeviceList = async (req, res, next) => {
 
 const createDeviceInfo = async (req, res, next) => {
   const deviceOwner = req.params.uid; // 사용자 ID
-  const { deviceGroup, macAddress, deviceName, battery } = req.body;
+  const { deviceGroup = (req.body.deviceGroup || "default_group"), // deviceGroup 있으면 대입 아니면 default_group으로 대입
+    macAddress, deviceName, battery } = req.body;
 
   // MongoDB 세션 시작
   const session = await mongoose.startSession();
@@ -38,6 +39,20 @@ const createDeviceInfo = async (req, res, next) => {
 
   try {
     // 0. 추가하려는 Device 의 deviceGroup 이 해당 uid 와 매칭되는 유저의 device_group_list에 존재하는지 확인
+    const userData = await dbUtils.findOneByField(UserData, "_id", deviceOwner, session);
+
+    if (!(userData.device_group_list.includes(deviceGroup))) {
+      // User의 device_group_list 중, 생성하려는 Device의 deviceGroup이 포함되어 있지 않으면 실패 처리
+      return next(new HttpError("없는 deviceGroup에 Device를 생성할 수 없습니다.", 409));
+    }
+
+    // for ( let tmp of userData.device_group_list ){
+    //   if(tmp === deviceGroup){
+    //     // User의 device_group_list 중, 만드려는 Device의 deviceGroup이 포함되어 있지 않으면 실패처리
+    //     return next(new HttpError("없는 deviceGroup 에 device를 생성 할 수 없습니다.", 404));
+    //   }
+    // }
+
     
     // 1. 기존 디바이스 목록 조회
     const deviceList = await dbUtils.findAllByField(DeviceInfo, "device_owner", deviceOwner, session);
@@ -53,8 +68,6 @@ const createDeviceInfo = async (req, res, next) => {
 
     // 3. 기존 디바이스가 있다면 삭제
     if (existingDevice) {
-      // UserData에서 사용자 조회 (트랜잭션 사용)
-      const userData = await dbUtils.findOneByField(UserData, "_id", deviceOwner, session);
       if (!userData) {
         return next(new HttpError("사용자를 찾을 수 없습니다.", 404));
       }
@@ -78,7 +91,7 @@ const createDeviceInfo = async (req, res, next) => {
     // 4. 새 디바이스 데이터 생성
     const newDeviceData = {
       device_owner: deviceOwner,
-      device_group: deviceGroup || "default_group",
+      device_group: deviceGroup,
       mac_address: macAddress,
       device_name: deviceName,
       battery: battery,
@@ -88,24 +101,19 @@ const createDeviceInfo = async (req, res, next) => {
     const newDevice = new DeviceInfo(newDeviceData);
     const savedDevice = await newDevice.save({ session });
 
-    // 6. UserData에서 사용자 조회 (트랜잭션 사용)
-    const userData = await dbUtils.findOneByField(UserData, "_id", deviceOwner, session);
-    if (!userData) {
-      return next(new HttpError("사용자를 찾을 수 없습니다.", 404));
-    }
-
-    // 7. UserData의 device_list에 새 디바이스의 _id 추가
+    // 6. UserData의 device_list에 새 디바이스의 _id 추가
     userData.device_list.push(savedDevice._id);
 
-    // 8. UserData 저장 (트랜잭션 사용)
+    // 7. UserData 저장 (트랜잭션 사용)
     await userData.save({ session });
 
-    // 9. 트랜잭션 커밋
+    // 8. 트랜잭션 커밋
     await session.commitTransaction();
     session.endSession();
 
-    // 10. 클라이언트에 응답
+    // 9. 클라이언트에 응답
     res.status(201).json({ result: savedDevice });
+    
   } catch (error) {
     // 트랜잭션 롤백
     await session.abortTransaction();
