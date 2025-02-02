@@ -13,6 +13,12 @@ router.use(checkAuth);
 
 router.get(process.env.API_DEVICE_LIST, deviceControllers.getDeviceList);
 
+router.get(process.env.API_DEVICE_INFO, 
+  [
+    check('macAddress').not().isEmpty()
+  ],
+  deviceControllers.getDeviceInfo);
+
 // app.use('/api/device', deviceRoute);  // /api/places/...   인 경우만 Routing 하도록 지정
 /** 유효한 Token 인지 확인하는 Middle Ware 단계
  *  유효한 토큰이 아닐 시, 밑에 라우팅들을 제한함
@@ -51,20 +57,12 @@ router.patch(
 );
 
 router.patch(
-  process.env.API_GROUP_UPADTE,
+  process.env.API_DEVICE_GROUP_UPADTE,
   [  // 각각의 함수를 호출하며 next를 호출한다
     check('macAddress').not().isEmpty(),
     check('deviceGroup').not().isEmpty(),
   ],
-  deviceControllers.updateGroupInfo
-);
-
-router.delete(
-  process.env.API_GROUP_DELETE,
-  [  // 각각의 함수를 호출하며 next를 호출한다
-    check('deviceGroup').not().isEmpty(),
-  ],
-  deviceControllers.deleteGroupInfo
+  deviceControllers.updateDeviceGroupInfo
 );
 
 /** 

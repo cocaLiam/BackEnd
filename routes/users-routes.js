@@ -74,12 +74,21 @@ router.patch(process.env.API_USER_UPDATE,
       .normalizeEmail()   // Test@test.com => test@test.com
       .isEmail()         //  @xxx.xxx 유무
       .optional(),
+    check('newPassword').isLength({ min: 6 }).not().isEmpty(),
     check('password').isLength({ min: 6 }).not().isEmpty(),
     check('homeAddress').not().optional(),
     check('phoneNumber').not().optional(),
   ]
   ,usersControllers.updateUserInfo);
 
+router.delete(
+  process.env.API_USER_GROUP_DELETE,
+  [  // 각각의 함수를 호출하며 next를 호출한다
+    check('dbObjectId').not().isEmpty(),
+    check('deleteTargetGroupName').not().isEmpty(),
+  ]
+  ,usersControllers.deleteGroupInfo
+);
 
 /** 
  * get 이고 post 고 patch, delete 고 기능이 있거나 한 건 아님.
