@@ -9,6 +9,7 @@ const placeSchema = new Schema({
   device_group  : { type: String, required: true, default: "default_group"}, // 기본값 설정
   mac_address   : { type: String, required: true },
   device_name   : { type: String, required: true },
+  device_type   : { type: String, required: true },
   battery       : { type: String, required: true },
 });
 

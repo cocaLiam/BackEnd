@@ -50,8 +50,8 @@ router.patch(
   process.env.API_DEVICE_UPDATE,
   [  // 각각의 함수를 호출하며 next를 호출한다
     check('macAddress').not().isEmpty(),
-    check('deviceName').not().isEmpty(),
-    check('battery').not().isEmpty(),
+    check('deviceName').optional(),
+    check('battery').optional(),
   ],
   deviceControllers.updateDeviceInfo
 );

@@ -59,6 +59,7 @@ const getDeviceInfo = async (req, res, next) => {
   if (deviceInfo.device_group) tmp.deviceGroup = deviceInfo.device_group;
   if (deviceInfo.mac_address) tmp.macAddress = deviceInfo.mac_address;
   if (deviceInfo.device_name) tmp.deviceName = deviceInfo.device_name;
+  if (deviceInfo.device_type) tmp.deviceType = deviceInfo.device_type;
   if (deviceInfo.battery) tmp.battery = deviceInfo.battery;
 
   // 클라이언트로 JSON 응답
@@ -144,6 +145,7 @@ const createDeviceInfo = async (req, res, next) => {
       device_group: deviceGroup,
       mac_address: macAddress,
       device_name: deviceName,
+      device_type: deviceName,
       battery: battery,
     };
 
@@ -253,15 +255,17 @@ const updateDeviceInfo = async (req, res, next) => {
   existingDevice = await dbUtils.findOneByField(
     DeviceInfo,
     "mac_address",
-    macAddress,
-    session
+    macAddress
   );
 
   if (existingDevice) {
-    const updateData = {
-      device_name: deviceName,
-      battery: battery,
-    };
+    const updateData = {};
+    if (deviceName != null) {  // null과 undefined 둘 다 체크
+        updateData.device_name = deviceName;
+    }
+    if (battery != null) {     // null과 undefined 둘 다 체크
+        updateData.battery = battery;
+    }
     result = await dbUtils.updateByField(
       DeviceInfo,
       "mac_address",
