@@ -71,7 +71,7 @@ const createDeviceInfo = async (req, res, next) => {
   const {
     deviceGroup = req.body.deviceGroup || "default_group", // deviceGroup 있으면 대입 아니면 default_group으로 대입
     macAddress,
-    deviceName,
+    deviceType,
     battery,
   } = req.body;
 
@@ -111,32 +111,35 @@ const createDeviceInfo = async (req, res, next) => {
       session
     );
 
-    // 3. 기존 디바이스가 있다면 에러처리리
+    // 3. 기존 디바이스가 있다면 에러처리
     if (existingDevice) {
-      if (!userData) {
-        return next(new HttpError("사용자를 찾을 수 없습니다.", 404));
-      }
+      return next(
+        new HttpError("이미 있는 Device를 등록 할 수 없습니다.", 409))
 
-      // UserData의 device_list에서 삭제된 디바이스의 _id 제거
-      userData.device_list = userData.device_list.filter(
-        (deviceId) => deviceId.toString() !== existingDevice._id.toString()
-      );
+      // if (!userData) {
+      //   return next(new HttpError("사용자를 찾을 수 없습니다.", 404));
+      // }
 
-      // UserData 저장 (트랜잭션 사용)
-      await userData.save({ session });
+      // // UserData의 device_list에서 삭제된 디바이스의 _id 제거
+      // userData.device_list = userData.device_list.filter(
+      //   (deviceId) => deviceId.toString() !== existingDevice._id.toString()
+      // );
 
-      // DeviceInfo에서 디바이스 삭제
-      const result = await dbUtils.deleteByField(
-        DeviceInfo,
-        "_id",
-        existingDevice._id,
-        session
-      );
-      if (result.deletedCount === 0) {
-        return next(
-          new HttpError("기존 디바이스 삭제 중 오류가 발생했습니다.", 500)
-        );
-      }
+      // // UserData 저장 (트랜잭션 사용)
+      // await userData.save({ session });
+
+      // // DeviceInfo에서 디바이스 삭제
+      // const result = await dbUtils.deleteByField(
+      //   DeviceInfo,
+      //   "_id",
+      //   existingDevice._id,
+      //   session
+      // );
+      // if (result.deletedCount === 0) {
+      //   return next(
+      //     new HttpError("기존 디바이스 삭제 중 오류가 발생했습니다.", 500)
+      //   );
+      // }
     }
 
     // 4. 새 디바이스 데이터 생성
@@ -144,8 +147,8 @@ const createDeviceInfo = async (req, res, next) => {
       device_owner: deviceOwner,
       device_group: deviceGroup,
       mac_address: macAddress,
-      device_name: deviceName,
-      device_type: deviceName,
+      device_name: deviceType,
+      device_type: deviceType,
       battery: battery,
     };
 
@@ -177,7 +180,7 @@ const createDeviceInfo = async (req, res, next) => {
 
 const deleteDeviceInfo = async (req, res, next) => {
   const deviceOwner = req.params.uid; // 사용자 ID
-  const { macAddress, deviceName } = req.body;
+  const { macAddress, deviceType } = req.body;
 
   // MongoDB 세션 시작
   const session = await mongoose.startSession();
@@ -195,7 +198,7 @@ const deleteDeviceInfo = async (req, res, next) => {
 
     // 3. 디바이스가 존재하지 않으면 에러 반환
     if (!existingDevice) {
-      return next(new HttpError(`등록된 ${deviceName}가 없습니다.`, 404));
+      return next(new HttpError(`등록된 ${deviceType}가 없습니다.`, 404));
     }
 
     // 4. 디바이스 삭제 (트랜잭션 사용)
@@ -203,7 +206,6 @@ const deleteDeviceInfo = async (req, res, next) => {
       DeviceInfo,
       "_id",
       existingDevice._id,
-      session,
       session
     );
     if (result.deletedCount === 0) {

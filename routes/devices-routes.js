@@ -29,7 +29,7 @@ router.post(
   [  // 각각의 함수를 호출하며 next를 호출한다
     check('deviceGroup').optional(), // deviceGroup이 비어 있어도 허용
     check('macAddress').not().isEmpty(),
-    check('deviceName').not().isEmpty(),
+    check('deviceType').not().isEmpty(),
     check('battery').not().isEmpty(),
   ],
   deviceControllers.createDeviceInfo /* API 핸들러 << 
@@ -41,7 +41,7 @@ router.delete(
   process.env.API_DEVICE_DELETE, 
   [  // 각각의 함수를 호출하며 next를 호출한다
     check('macAddress').not().isEmpty(),
-    check('deviceName').not().isEmpty(),
+    check('deviceType').not().isEmpty(),
   ],
   deviceControllers.deleteDeviceInfo
 );
