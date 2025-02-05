@@ -74,7 +74,10 @@ mongoose
   .connect(url)
   .then(() => {
     log.info(`BACKEND PORT : ${process.env.BACKEND_PORT}`);
-    app.listen(Number(process.env.BACKEND_PORT));
+    // app.listen(Number(process.env.BACKEND_PORT));
+    app.listen(Number(process.env.BACKEND_PORT), '0.0.0.0', () => {
+      console.log(`Server is running on http://0.0.0.0:${Number(process.env.BACKEND_PORT)}`);
+    });
   })
   .catch(error => {
     log.error("Connection Error");

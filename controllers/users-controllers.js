@@ -194,10 +194,6 @@ const getUserInfo = async (req, res, next) => {
   const dbObjectId = req.tokenData.dbObjectId;
   const userEmail = req.tokenData.userEmail;
 
-  log.notice(
-    `FRONT FROM (tokenData) : ${JSON.stringify(req.tokenData, null, 2)}`
-  );
-
   let existingUser;
   /** DB 찾기 에러 */
   try {
@@ -229,7 +225,6 @@ const getUserInfo = async (req, res, next) => {
   if (existingUser.device_list) userInfo.deviceList = existingUser.device_list;
   if (existingUser.device_group_list)
     userInfo.deviceGroupList = existingUser.device_group_list;
-  log.notice(`BACK FROM : ${JSON.stringify(userInfo, null, 2)}`);
 
   res.status(201).json({ userInfo: userInfo }); // userInfo 변수를 반환
 };
@@ -272,8 +267,6 @@ const refreshToken = async (req, res, next) => {
 const createGroup = async (req, res, next) => {
   const { dbObjectId, createTargetGroupName } = req.body;
 
-  log.notice(dbObjectId);
-  log.notice(createTargetGroupName);
   let existingUser;
 
   // MongoDB 세션 시작
@@ -289,8 +282,6 @@ const createGroup = async (req, res, next) => {
       session
     );
 
-    log.notice(`createTargetGroupName : ${createTargetGroupName}`);
-    log.notice(`existingUser.device_group_list : ${existingUser.device_group_list}`);
     if (existingUser.device_group_list.includes(createTargetGroupName)) {
       return next(new HttpError(`${createTargetGroupName}은 이미 존재하는 Group 명입니다.`, 409));
     }
@@ -354,9 +345,6 @@ const updateGroup = async (req, res, next) => {
     existingUser.device_group_list = existingUser.device_group_list.filter(
       (item) => item !== currentGroup
     );
-    log.notice(
-      `existingUser.device_group_list : ${existingUser.device_group_list}`
-    );
 
     // updateTargetGroupName 삽입입
     existingUser.device_group_list.push(updateTargetGroupName);
@@ -401,8 +389,6 @@ const updateUserInfo = async (req, res, next) => {
     phoneNumber,
   } = req.body;
 
-  log.notice(`newpassword : ${newPassword}`);
-  log.notice(`password : ${password}`);
   let hashedPassword;
   let existingUser;
 
@@ -539,8 +525,6 @@ const deleteGroupInfo = async (req, res, next) => {
   } finally {
     session.endSession();
   }
-
-  log.notice(existingUser);
 
   let userInfo = {};
   if (existingUser.user_name) userInfo.userName = existingUser.user_name;

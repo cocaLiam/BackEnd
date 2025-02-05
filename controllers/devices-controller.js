@@ -18,8 +18,6 @@ const getDeviceList = async (req, res, next) => {
     "device_owner",
     deviceOwner
   );
-  log.notice(deviceList);
-  log.notice(JSON.stringify(deviceList, null, 2));
 
   if (!deviceList) {
     return next(
@@ -46,8 +44,6 @@ const getDeviceInfo = async (req, res, next) => {
     "mac_address",
     macAddress
   );
-  log.notice(deviceInfo);
-  log.notice(JSON.stringify(deviceInfo, null, 2));
 
   if (!deviceInfo) {
     return next(
@@ -80,6 +76,8 @@ const createDeviceInfo = async (req, res, next) => {
   session.startTransaction();
 
   try {
+
+    log.notice(`req.body : ${JSON.stringify(req.body,null,2)}`);
     // 0. 추가하려는 Device 의 deviceGroup 이 해당 uid 와 매칭되는 유저의 device_group_list에 존재하는지 확인
     const userData = await dbUtils.findOneByField(
       UserData,
@@ -91,7 +89,7 @@ const createDeviceInfo = async (req, res, next) => {
     if (!userData.device_group_list.includes(deviceGroup)) {
       // User의 device_group_list 중, 생성하려는 Device의 deviceGroup이 포함되어 있지 않으면 실패 처리
       return next(
-        new HttpError("없는 deviceGroup에 Device를 생성할 수 없습니다.", 409)
+        new HttpError("없는 deviceGroup에 Device를 생성할 수 없습니다.", 408)
       );
     }
 
