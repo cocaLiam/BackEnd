@@ -23,8 +23,7 @@ router.post(
     check('homeAddress'),
     check('phoneNumber'),
   ],
-  usersControllers.signup
-);
+  usersControllers.signup);
 
 router.post(process.env.API_USER_LOGIN, 
   [

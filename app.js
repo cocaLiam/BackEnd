@@ -4,6 +4,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 
+const oauthRoutes = require('./routes/oauth-routes');
 const usersRoutes = require('./routes/users-routes');
 const deviceRoutes = require('./routes/devices-routes');
 const HttpError = require('./models/http-error');
@@ -34,8 +35,9 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use(process.env.API_OUATH_ROUTER, oauthRoutes); 
 app.use(process.env.API_USER_ROUTER, usersRoutes);
-app.use(process.env.API_DEVICE_ROUTER, deviceRoutes); 
+app.use(process.env.API_DEVICE_ROUTER, deviceRoutes);
 
 app.use((req, res, next) => {
   /**
@@ -48,15 +50,6 @@ app.use((req, res, next) => {
 });
 
 app.use((error, req, res, next) => {
-  if (req.file) {
-    console.dir(req.file.originalname);
-    console.dir(req.file.destination);
-    // console.dir(req.file.path);
-    // fs.unlink(req.file.path, err => {
-    //   // err && log.error(`unlink error ${err}`); // err이 null이 아니면 출력
-    //   err ? log.error(`파일 삭제 error ${err}`) : log.info("파일 삭제 완료");
-    // })
-  }
   if (res.headerSent) {  //응답과 연결된 헤더가 이미 전송된 상태인지 확인하는 프러파티 이다.
     return next(error);
   }

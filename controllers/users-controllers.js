@@ -30,20 +30,21 @@ const ONE_HOUR = 60 * 60;
 const HALF_ONE_HOUR = 60 * 30;
 
 function debugReqConsolePrint(req) {
-  console.log("=== DEBUG START ===");
+  console.log("======= DEBUG LOG =======");
   console.log("1. Raw req.body:", req.body);
-  console.log("2. req.body type:", typeof req.body);
+  console.log(`2. req.body type: ${Object.prototype.toString.call(req.body)}`);
   console.log("3. req.body keys:", Object.keys(req.body));
   console.log("4. stringified body:", JSON.stringify(req.body));
   console.log("5. dbObjectId:", req.body?.dbObjectId);
-  console.log("=== DEBUG END ===");
+  console.log("======= DEBUG LOG =======");
 }
 const signup = async (req, res, next) => {
   /** users-routes.js 에서 검사한 Name email password 의 밸리데이션 체크*/
   // debugReqConsolePrint(req);
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    log.error(`사용자 입력값 Validation Error : ${req.body}`);
+    log.error("사용자 입력값 Validation Error ↓ ");
+    debugReqConsolePrint(req)
     res.status(422);
     return next(
       new HttpError("사용자 입력값 유효하지 않음\n 비밀번호 6글자 이상", 422)
