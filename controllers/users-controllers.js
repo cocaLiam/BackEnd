@@ -70,6 +70,7 @@ const signup = async (req, res, next) => {
       return next(new HttpError("이미 있는 ID 에 중복가입 에러", 409));
     }
   } catch (err) {
+    log.error(`에러 스택: ${err.stack}`);
     return next(new HttpError("DB 조회 실패 [ 서버 에러 : DB query ]", 500));
   }
 
@@ -77,24 +78,27 @@ const signup = async (req, res, next) => {
   try {
     hashedPassword = await bcrypt.hash(password, 12);
   } catch (err) {
+    log.error(`에러 스택: ${err.stack}`);
     return next(
       new HttpError("비밀번호 생성 에러 [ 서버 에러 : 암호화 에러 ]", 500)
     );
   }
 
   const createdUser = new UserData({
-    user_name: userName,
-    user_email: userEmail,
-    password: hashedPassword,
+    user_name   : userName,
+    user_email  : userEmail,
+    login_type: "Email",
+    password    : hashedPassword,
     home_address: homeAddress,
     phone_number: phoneNumber,
-    places: [],
+    device_list: [],
   });
 
   /** 회원 정보 DB Create*/
   try {
     await createdUser.save();
   } catch (err) {
+    log.error(`에러 스택: ${err.stack}`);
     return next(
       new HttpError(`Sighing Up failed, please try again ${err}`, 500)
     );
@@ -112,6 +116,7 @@ const signup = async (req, res, next) => {
       { expiresIn: HALF_ONE_MONTH }
     );
   } catch (err) {
+    log.error(`에러 스택: ${err.stack}`);
     return next(new HttpError("토큰 생성 에러 [ 서버 에러 : 토큰 에러 ]", 500));
   }
 
@@ -119,7 +124,6 @@ const signup = async (req, res, next) => {
   // res.status(201).json({ user: createdUser.toObject({ getters: true }) });
   res.status(201).json({
     dbObjectId: createdUser.id,
-    emailVerified: true,
     token: token,
   });
 };
@@ -142,6 +146,7 @@ const login = async (req, res, next) => {
       return next(new HttpError("Email 이 존재하지 않습니다.", 404));
     }
   } catch (err) {
+    log.error(`에러 스택: ${err.stack}`);
     return next(
       new HttpError("로그인 할 수 없습니다. [ 서버 에러 : DB query ] ", 500)
     );
@@ -158,6 +163,7 @@ const login = async (req, res, next) => {
       return next(new HttpError("비밀번호가 틀립니다.", 403));
     }
   } catch (bcryptError) {
+    log.error(`에러 스택: ${err.stack}`);
     log.error("bcrypt 에러:", bcryptError);
     return next(new HttpError("비밀번호 검증 중 오류가 발생했습니다.", 500));
   }
@@ -174,6 +180,7 @@ const login = async (req, res, next) => {
       { expiresIn: HALF_ONE_MONTH }
     );
   } catch (err) {
+    log.error(`에러 스택: ${err.stack}`);
     log.error(err);
     return next(new HttpError("토큰 생성 에러 [ 서버 에러 : 토큰 에러 ]", 500));
   }
@@ -192,6 +199,7 @@ const login = async (req, res, next) => {
 const getUserInfo = async (req, res, next) => {
   /* 원래는 req.headers.authorization에 담겨있으나, 
   checkAuth 에서 req.tokenData 에 dbObjectId, userEmail 를 넣어서 보내줌*/
+
   const dbObjectId = req.tokenData.dbObjectId;
   const userEmail = req.tokenData.userEmail;
 
@@ -210,6 +218,7 @@ const getUserInfo = async (req, res, next) => {
       return next(new HttpError("Email 이 존재하지 않습니다.", 404));
     }
   } catch (err) {
+    log.error(`에러 스택: ${err.stack}`);
     return next(
       new HttpError("로그인 할 수 없습니다. [ 서버 에러 : DB query ] ", 500)
     );
@@ -261,6 +270,7 @@ const refreshToken = async (req, res, next) => {
       newToken: newToken,
     });
   } catch (err) {
+    log.error(`에러 스택: ${err.stack}`);
     return next(new HttpError("토큰 갱신 중 오류가 발생했습니다.", 500));
   }
 };
@@ -293,6 +303,7 @@ const createGroup = async (req, res, next) => {
     // 8. 트랜잭션 커밋
     await session.commitTransaction();
   } catch (error) {
+    log.error(`에러 스택: ${err.stack}`);
     // 트랜잭션 롤백
     if (session.inTransaction()) {
       await session.abortTransaction();
@@ -355,6 +366,7 @@ const updateGroup = async (req, res, next) => {
     // 8. 트랜잭션 커밋
     await session.commitTransaction();
   } catch (error) {
+    log.error(`에러 스택: ${err.stack}`);
     // 트랜잭션 롤백
     if (session.inTransaction()) {
       await session.abortTransaction();
@@ -429,13 +441,15 @@ const updateUserInfo = async (req, res, next) => {
           try {
             hashedPassword = await bcrypt.hash(newPassword, 12);
           } catch (err) {
-            return next(new HttpError("비밀번호 DB에 업데이트 에러", 500));
+            log.error(`에러 스택: ${err.stack}`);
+            return next(new HttpError("비밀번호 암호화 실패", 500));
           }
         }
       } else {
         return next(new HttpError("비밀번호가 틀립니다.", 403));
       }
     } catch (bcryptError) {
+      log.error(`에러 스택: ${err.stack}`);
       log.error("bcrypt 에러:", bcryptError);
       return next(new HttpError("비밀번호 검증 중 오류가 발생했습니다.", 500));
     }
@@ -450,6 +464,7 @@ const updateUserInfo = async (req, res, next) => {
 
     result = await dbUtils.updateByField(UserData, "_id", dbObjectId, userInfo);
   } catch (err) {
+    log.error(`에러 스택: ${err.stack}`);
     return next(
       new HttpError("업데이트 할 수 없습니다. [ 서버 에러 : DB query ] ", 500)
     );
@@ -513,6 +528,7 @@ const deleteGroupInfo = async (req, res, next) => {
     // 5. 트랜잭션 커밋
     await session.commitTransaction();
   } catch (error) {
+    log.error(`에러 스택: ${err.stack}`);
     // 트랜잭션 롤백
     await session.abortTransaction();
 

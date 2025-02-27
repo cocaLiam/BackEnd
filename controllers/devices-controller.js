@@ -37,6 +37,8 @@ const getDeviceList = async (req, res, next) => {
 };
 
 const getDeviceInfo = async (req, res, next) => {
+  log.error(JSON.stringify(req.body,2,null))
+
   const deviceOwner = req.params.uid; //
   const { macAddress } = req.body;
   const deviceInfo = await dbUtils.findOneByField(

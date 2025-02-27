@@ -7,6 +7,7 @@ const dbTableName = "users_data"
 
 const userSchema = new Schema({
   user_name     : { type: String, required: [true, '사용자 이름은 필수입니다.'] },
+  login_type    : { type: String, default: "Email" },
   user_email    : { type: String, required: [true, '이메일은 필수입니다.'], unique: true },
   password      : { type: String, required: [true, '비밀번호는 필수입니다.'], minlength: 6 },
   home_address  : { type: String, required: [true, '주소는 필수입니다.'] },
