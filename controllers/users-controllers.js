@@ -131,8 +131,6 @@ const signup = async (req, res, next) => {
 const login = async (req, res, next) => {
   log.info("LOGIN 시도 ... ")
   const { userEmail, password } = req.body;
-  log.debug(`LOGIN REQ : `)
-  debugReqConsolePrint(req)
 
   let existingUser;
   /** DB 찾기 에러 */

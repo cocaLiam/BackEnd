@@ -1,39 +1,38 @@
 // const fs = require('fs');
 // const path = require('path');
-const express = require('express');
-const bodyParser = require('body-parser');
-const mongoose = require('mongoose');
+const express = require("express");
+const bodyParser = require("body-parser");
+const mongoose = require("mongoose");
 
-const oauthRoutes = require('./routes/oauth-routes');
-const usersRoutes = require('./routes/users-routes');
-const deviceRoutes = require('./routes/devices-routes');
-const HttpError = require('./models/http-error');
+const oauthRoutes = require("./routes/oauth-routes");
+const usersRoutes = require("./routes/users-routes");
+const deviceRoutes = require("./routes/devices-routes");
+const HttpError = require("./models/http-error");
 const log = require("./util/logger");
 
-const cors = require('cors');
+const cors = require("cors");
 const app = express();
 
 // app.use(process.env.API_UPLOAD_IMAGES, express.static(path.join('uploads', 'images')));
 // // uploads/images 라는 경로에 있는 파일들을 반환가능하게 함
 
 // CORS 설정
-// const allowedOrigins = ['https://app.cocabot.com', 'http://localhost:3000'];
-const allowedOrigins = ['https://app.cocabot.com', 'http://localhost:3000', 'https://cocabot-backendprod-edfd59f6ff11.herokuapp.com/'];
+// const allowedOrigins = ['http://localhost:3000', 'https://app.cocabot.com', 'https://cocabot-backendprod-edfd59f6ff11.herokuapp.com/'];
+const allowedOrigins = ["http://localhost:3000", "https://app.cocabot.com"];
 
 const corsOptions = {
   origin: function (origin, callback) {
     if (allowedOrigins.includes(origin) || !origin) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      callback(new Error("Not allowed by CORS"));
     }
   },
 };
 
 app.use(cors(corsOptions));
 
-log.info("CORS 허용 링크 : ", allowedOrigins);
-
+console.log("CORS 허용 링크 : ", JSON.stringify(allowedOrigins, null, 2));
 
 // app.use(cors());
 // const corsOptions = {
@@ -44,11 +43,10 @@ log.info("CORS 허용 링크 : ", allowedOrigins);
 
 // app.use(cors(corsOptions));
 
-
 // app.use(bodyParser.urlencoded());  // Form Data 전용 : HTML 폼 ( ex) name=John&age=30 )
-app.use(bodyParser.json());           // Json Data 전용 : JSON 형식 ( ex) {"name": "John", "age": 30} )
+app.use(bodyParser.json()); // Json Data 전용 : JSON 형식 ( ex) {"name": "John", "age": 30} )
 
-app.use(process.env.API_OUATH_ROUTER, oauthRoutes); 
+app.use(process.env.API_OUATH_ROUTER, oauthRoutes);
 app.use(process.env.API_USER_ROUTER, usersRoutes);
 app.use(process.env.API_DEVICE_ROUTER, deviceRoutes);
 
@@ -58,21 +56,21 @@ app.use((req, res, next) => {
    * throw 나 next(error) 로 에러 미들웨어에 던져준다.
    */
   log.warn(`router에 없는 링크로의 접속 시도 : ${req.url}`);
-  const error = new HttpError('# Could not find this Link !! #', 404);
+  const error = new HttpError("# Could not find this Link !! #", 404);
   throw error;
 });
 
 app.use((error, req, res, next) => {
-  if (res.headerSent) {  //응답과 연결된 헤더가 이미 전송된 상태인지 확인하는 프러파티 이다.
+  if (res.headerSent) {
+    //응답과 연결된 헤더가 이미 전송된 상태인지 확인하는 프러파티 이다.
     return next(error);
   }
-  res.status(error.code || 500) // if(error.code) { return error.code} else { return 500 }
+  res.status(error.code || 500); // if(error.code) { return error.code} else { return 500 }
   // 500 : 서버 측 에러 (코드의 버그, 서버 설정 문제, 데이터베이스 연결 오류 등 다양한 이유로 발생)
-  res.json({ message: error.message || '예상하지 못한 에러 발생' });
+  res.json({ message: error.message || "예상하지 못한 에러 발생" });
 });
 
-
-const url = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_CLUSTER}.idx4l.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority&appName=dev-cluster`;
+const url = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_CLUSTER}.idx4l.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority&appName=${process.env.DB_APP_NAME}`;
 // mongoose.set('debug', true);
 
 mongoose
@@ -80,11 +78,13 @@ mongoose
   .then(() => {
     log.info(`BACKEND PORT : ${process.env.PORT}`);
     // app.listen(Number(process.env.PORT));
-    app.listen(Number(process.env.PORT), '0.0.0.0', () => {
-      console.log(`Server is running on http://0.0.0.0:${Number(process.env.PORT)}`);
+    app.listen(Number(process.env.PORT), "0.0.0.0", () => {
+      console.log(
+        `Server is running on http://0.0.0.0:${Number(process.env.PORT)}`
+      );
     });
   })
-  .catch(error => {
+  .catch((error) => {
     log.error("Connection Error");
     log.error(error);
   });
