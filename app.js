@@ -32,7 +32,7 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-log.info("CORS 허용 링크 : ", allowedOrigins)
+log.info("CORS 허용 링크 : ", allowedOrigins);
 
 
 // app.use(cors());
