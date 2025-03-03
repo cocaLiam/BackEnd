@@ -10,13 +10,54 @@ const deviceRoutes = require('./routes/devices-routes');
 const HttpError = require('./models/http-error');
 const log = require("./util/logger");
 
+const cors = require('cors');
 const app = express();
-
-// app.use(bodyParser.urlencoded());  // Form Data 전용 : HTML 폼 ( ex) name=John&age=30 )
-app.use(bodyParser.json());           // Json Data 전용 : JSON 형식 ( ex) {"name": "John", "age": 30} )
 
 // app.use(process.env.API_UPLOAD_IMAGES, express.static(path.join('uploads', 'images')));
 // // uploads/images 라는 경로에 있는 파일들을 반환가능하게 함
+
+// CORS 설정
+const allowedOrigins = ['https://app.cocabot.com', 'http://localhost:3000'];
+
+const corsOptions = {
+    origin: function (origin, callback) {
+        // origin이 allowedOrigins 배열에 있으면 허용
+        if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+            callback(null, true);
+        } else {
+            callback(new Error('CORS 정책에 의해 차단되었습니다'));
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+    allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
+};
+
+app.use(cors(corsOptions));
+// app.use(bodyParser.urlencoded());  // Form Data 전용 : HTML 폼 ( ex) name=John&age=30 )
+app.use(bodyParser.json());           // Json Data 전용 : JSON 형식 ( ex) {"name": "John", "age": 30} )
+
+
+// app.use(cors({
+//   origin: 'https://app.cocabot.com',
+//   credentials: true,
+//   methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+//   allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
+// }));
+
+// app.use(cors({
+//   origin: ['https://app.cocabot.com', 'http://localhost:3000'],
+//   credentials: true
+// }));
+
+// app.use((req, res, next) => {
+//   res.header('Access-Control-Allow-Origin', 'https://app.cocabot.com');
+//   res.header('Access-Control-Allow-Credentials', 'true');
+//   // res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+//   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+//   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+//   next();
+// });
 
 app.use((req, res, next) => {
   // 모든 도메인에서 이 서버에 접근할 수 있도록 허용합니다.
