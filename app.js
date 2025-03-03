@@ -17,26 +17,33 @@ const app = express();
 // // uploads/images 라는 경로에 있는 파일들을 반환가능하게 함
 
 // CORS 설정
-const allowedOrigins = ['https://app.cocabot.com', 'http://localhost:3000'];
-
+app.use(cors());
 const corsOptions = {
-    origin: function (origin, callback) {
-        // origin이 allowedOrigins 배열에 있으면 허용
-        if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
-            callback(null, true);
-        } else {
-            callback(new Error('CORS 정책에 의해 차단되었습니다'));
-        }
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
-    allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
+  origin: ['https://app.cocabot.com', 'http://localhost:3000'],
+  credentials: true, // 필요한 경우 credentials 설정
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'] // 필요한 HTTP 메서드 설정
 };
 
 app.use(cors(corsOptions));
-// app.use(bodyParser.urlencoded());  // Form Data 전용 : HTML 폼 ( ex) name=John&age=30 )
-app.use(bodyParser.json());           // Json Data 전용 : JSON 형식 ( ex) {"name": "John", "age": 30} )
 
+
+// const allowedOrigins = ['https://app.cocabot.com', 'http://localhost:3000'];
+
+// const corsOptions = {
+//     origin: function (origin, callback) {
+//         // origin이 allowedOrigins 배열에 있으면 허용
+//         if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+//             callback(null, true);
+//         } else {
+//             callback(new Error('CORS 정책에 의해 차단되었습니다'));
+//         }
+//     },
+//     // credentials: true,
+//     methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+//     allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
+// };
+
+// app.use(cors(corsOptions));
 
 // app.use(cors({
 //   origin: 'https://app.cocabot.com',
@@ -75,6 +82,10 @@ app.use(bodyParser.json());           // Json Data 전용 : JSON 형식 ( ex) {"
 //   // 다음 미들웨어 함수로 제어를 전달합니다.
 //   next();
 // });
+
+
+// app.use(bodyParser.urlencoded());  // Form Data 전용 : HTML 폼 ( ex) name=John&age=30 )
+app.use(bodyParser.json());           // Json Data 전용 : JSON 형식 ( ex) {"name": "John", "age": 30} )
 
 app.use(process.env.API_OUATH_ROUTER, oauthRoutes); 
 app.use(process.env.API_USER_ROUTER, usersRoutes);
