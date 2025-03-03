@@ -17,7 +17,8 @@ const app = express();
 // // uploads/images 라는 경로에 있는 파일들을 반환가능하게 함
 
 // CORS 설정
-const allowedOrigins = ['https://app.cocabot.com', 'http://localhost:3000'];
+// const allowedOrigins = ['https://app.cocabot.com', 'http://localhost:3000'];
+const allowedOrigins = ['https://app.cocabot.com', 'http://localhost:3000', 'https://cocabot-backendprod-edfd59f6ff11.herokuapp.com/'];
 
 const corsOptions = {
   origin: function (origin, callback) {
