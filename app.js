@@ -17,71 +17,29 @@ const app = express();
 // // uploads/images 라는 경로에 있는 파일들을 반환가능하게 함
 
 // CORS 설정
-app.use(cors());
+const allowedOrigins = ['https://app.cocabot.com', 'http://localhost:3000'];
+
 const corsOptions = {
-  origin: ['https://app.cocabot.com', 'http://localhost:3000'],
-  credentials: true, // 필요한 경우 credentials 설정
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'] // 필요한 HTTP 메서드 설정
+  origin: function (origin, callback) {
+    if (allowedOrigins.includes(origin) || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
 };
 
 app.use(cors(corsOptions));
 
 
-// const allowedOrigins = ['https://app.cocabot.com', 'http://localhost:3000'];
-
+// app.use(cors());
 // const corsOptions = {
-//     origin: function (origin, callback) {
-//         // origin이 allowedOrigins 배열에 있으면 허용
-//         if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
-//             callback(null, true);
-//         } else {
-//             callback(new Error('CORS 정책에 의해 차단되었습니다'));
-//         }
-//     },
-//     // credentials: true,
-//     methods: ['GET', 'POST', 'PATCH', 'DELETE'],
-//     allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
+//   origin: ['https://app.cocabot.com', 'http://localhost:3000'],
+//   credentials: true, // 필요한 경우 credentials 설정
+//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'] // 필요한 HTTP 메서드 설정
 // };
 
 // app.use(cors(corsOptions));
-
-// app.use(cors({
-//   origin: 'https://app.cocabot.com',
-//   credentials: true,
-//   methods: ['GET', 'POST', 'PATCH', 'DELETE'],
-//   allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
-// }));
-
-// app.use(cors({
-//   origin: ['https://app.cocabot.com', 'http://localhost:3000'],
-//   credentials: true
-// }));
-
-// app.use((req, res, next) => {
-//   res.header('Access-Control-Allow-Origin', 'https://app.cocabot.com');
-//   res.header('Access-Control-Allow-Credentials', 'true');
-//   // res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-//   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-//   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-//   next();
-// });
-
-// app.use((req, res, next) => {
-//   // 모든 도메인에서 이 서버에 접근할 수 있도록 허용합니다.
-//   res.setHeader('Access-Control-Allow-Origin', '*');
-
-//   // 요청 헤더에 포함될 수 있는 헤더의 종류를 지정합니다.
-//   res.setHeader(
-//     'Access-Control-Allow-Headers',
-//     'Origin, X-Requested-With, Content-Type, Accept, Authorization'
-//   );
-
-//   // 클라이언트가 서버에 요청할 수 있는 HTTP 메서드의 종류를 지정합니다.
-//   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE');
-
-//   // 다음 미들웨어 함수로 제어를 전달합니다.
-//   next();
-// });
 
 
 // app.use(bodyParser.urlencoded());  // Form Data 전용 : HTML 폼 ( ex) name=John&age=30 )
