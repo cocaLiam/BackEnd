@@ -59,22 +59,22 @@ app.use(bodyParser.json());           // Json Data 전용 : JSON 형식 ( ex) {"
 //   next();
 // });
 
-app.use((req, res, next) => {
-  // 모든 도메인에서 이 서버에 접근할 수 있도록 허용합니다.
-  res.setHeader('Access-Control-Allow-Origin', '*');
+// app.use((req, res, next) => {
+//   // 모든 도메인에서 이 서버에 접근할 수 있도록 허용합니다.
+//   res.setHeader('Access-Control-Allow-Origin', '*');
 
-  // 요청 헤더에 포함될 수 있는 헤더의 종류를 지정합니다.
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'Origin, X-Requested-With, Content-Type, Accept, Authorization'
-  );
+//   // 요청 헤더에 포함될 수 있는 헤더의 종류를 지정합니다.
+//   res.setHeader(
+//     'Access-Control-Allow-Headers',
+//     'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+//   );
 
-  // 클라이언트가 서버에 요청할 수 있는 HTTP 메서드의 종류를 지정합니다.
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE');
+//   // 클라이언트가 서버에 요청할 수 있는 HTTP 메서드의 종류를 지정합니다.
+//   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE');
 
-  // 다음 미들웨어 함수로 제어를 전달합니다.
-  next();
-});
+//   // 다음 미들웨어 함수로 제어를 전달합니다.
+//   next();
+// });
 
 app.use(process.env.API_OUATH_ROUTER, oauthRoutes); 
 app.use(process.env.API_USER_ROUTER, usersRoutes);
@@ -101,7 +101,6 @@ app.use((error, req, res, next) => {
 
 
 const url = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_CLUSTER}.idx4l.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority&appName=dev-cluster`;
-
 // mongoose.set('debug', true);
 
 mongoose
