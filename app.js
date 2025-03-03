@@ -78,10 +78,10 @@ const url = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${p
 mongoose
   .connect(url)
   .then(() => {
-    log.info(`BACKEND PORT : ${process.env.BACKEND_PORT}`);
-    // app.listen(Number(process.env.BACKEND_PORT));
-    app.listen(Number(process.env.BACKEND_PORT), '0.0.0.0', () => {
-      console.log(`Server is running on http://0.0.0.0:${Number(process.env.BACKEND_PORT)}`);
+    log.info(`BACKEND PORT : ${process.env.PORT}`);
+    // app.listen(Number(process.env.PORT));
+    app.listen(Number(process.env.PORT), '0.0.0.0', () => {
+      console.log(`Server is running on http://0.0.0.0:${Number(process.env.PORT)}`);
     });
   })
   .catch(error => {
