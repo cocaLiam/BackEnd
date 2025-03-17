@@ -364,7 +364,8 @@ const googleLogin = async (req, res, next) => {
 };
 
 const naverLogin = async (req, res, next) => {
-  // debugReqConsolePrint(req);
+  debugReqConsolePrint(req);
+  log.notice("네이바");
 
   res.status(201).json({});
 };
