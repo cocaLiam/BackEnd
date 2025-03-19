@@ -2,7 +2,7 @@ const { validationResult } = require("express-validator");
 
 const NodeCache = require("node-cache");
 const { OAuth2Client } = require("google-auth-library");
-const crypto = require('crypto');
+const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -71,8 +71,6 @@ const verifyEmail = async (req, res, next) => {
 
   const pinCode = nodemailer.generateTempPinCode();
 
-  log.notice(`pinCode : ${pinCode}`);
-
   const cacheKey = userEmail;
 
   const existingCode = myCache.get(cacheKey);
@@ -90,8 +88,6 @@ const verifyEmail = async (req, res, next) => {
     },
     300
   ); // 캐시 저장데이터 만료기한 5분분
-
-  log.notice(`userEmail : ${userEmail}`);
 
   nodemailer.sendVerifyEmail(userEmail, pinCode);
   res.status(201).json();
@@ -112,16 +108,12 @@ const checkEmail = async (req, res, next) => {
   }
 
   const storedData = myCache.get(cacheKey);
-  log.notice(storedData);
 
   if (!storedData) {
     return next(
       new HttpError("인증 코드가 만료되었거나 존재하지 않습니다.", 423)
     );
   }
-
-  log.notice(`${Object.prototype.toString.call(storedData.pinCode)}`);
-  log.notice(`${Object.prototype.toString.call(pinCode)}`);
 
   if (storedData.pinCode == pinCode) {
     // 인증 성공 시 캐시에서 삭제
@@ -130,7 +122,6 @@ const checkEmail = async (req, res, next) => {
     return;
   }
 
-  log.notice("PinCode 가 다른 경우");
   // 실패 횟수 증가
   storedData.attempts += 1;
 
@@ -141,7 +132,6 @@ const checkEmail = async (req, res, next) => {
   }
 
   myCache.set(cacheKey, storedData);
-  log.notice(storedData.attempts);
   return next(new HttpError("잘못된 인증 코드입니다.", 423));
 };
 
@@ -179,9 +169,6 @@ const passwordReset = async (req, res, next) => {
       "user_email",
       userEmail
     );
-    //# DB 상에 해당 user_email 이 없으면 existingUser 이 null 값
-    log.notice(`existingUser : ${existingUser}`);
-
     /** 일치하는 Email이 없는 경우 */
     if (!existingUser) {
       log.error(`회원가입되지 않은 Email 입니다. : ${userEmail}`);
@@ -189,11 +176,9 @@ const passwordReset = async (req, res, next) => {
     }
 
     tempEmailPassword = nodemailer.generateTempPassword();
-    log.notice(`tempEmailPassword : ${tempEmailPassword}`);
     debugVariablePrint(tempEmailPassword);
     try {
       hashedPassword = await bcrypt.hash(tempEmailPassword, 12);
-      log.notice(`hashedPassword : ${hashedPassword}`);
     } catch (err) {
       log.error(`에러 스택: ${err.stack}`);
       return next(new HttpError("비밀번호 암호화 실패", 500));
@@ -231,10 +216,7 @@ const googleLogin = async (req, res, next) => {
 
     // 검증된 페이로드 가져오기
     payload = ticket.getPayload();
-    const { email, name, sub: googleId } = payload;
-    log.notice(payload.email);
-    log.notice(payload.name);
-    log.notice(payload.sub);
+    // const { email, name, sub: googleId } = payload;
 
     // 이후 로직 처리...
   } catch (error) {
@@ -247,7 +229,6 @@ const googleLogin = async (req, res, next) => {
   if (existingUser) {
     // 이미 가입된 사용자인 경우, 로그인 처리리
     debugVariablePrint(existingUser);
-    log.notice(`existingUser.login_type : ${existingUser.login_type}`);
     if (existingUser.login_type != "Google") {
       return next(
         new HttpError(
@@ -280,14 +261,12 @@ const googleLogin = async (req, res, next) => {
     }
   }
 
-  // 새로운 사용자인 경우, 회원가입처리리
+  // 새로운 사용자인 경우, 회원가입처리
   let hashedPassword;
   let tempEmailPassword = nodemailer.generateTempPassword();
-  log.notice(`tempEmailPassword : ${tempEmailPassword}`);
   try {
     /** 가입하려는 password 암호화 */
     hashedPassword = await bcrypt.hash(tempEmailPassword, 12);
-    log.notice(`hashedPassword : ${hashedPassword}`);
   } catch (err) {
     log.error(`에러 스택: ${err.stack}`);
     return next(new HttpError("비밀번호 암호화 실패", 500));
@@ -330,44 +309,106 @@ const googleLogin = async (req, res, next) => {
     return next(new HttpError("토큰 생성 에러 [ 서버 에러 : 토큰 에러 ]", 500));
   }
 
-  log.notice(`createdUser.id : ${createdUser.id}`)
-  log.notice(`token : ${token}`)
   res.status(201).json({
     dbObjectId: createdUser.id,
     token: token,
   });
-  /**
-{  credential.XXX
-  // 필수 필드
-  sub: "구글에서 발급한 고유 사용자 ID",
-  email: "사용자 이메일 주소",
-  email_verified: "이메일 인증 여부 (boolean)",
-  name: "사용자 전체 이름",
-  
-  // 추가 필드
-  given_name: "이름",
-  family_name: "성",
-  picture: "프로필 사진 URL",
-  locale: "사용자 선호 언어 설정",
-  
-  // 시간 관련 정보
-  iat: "토큰 발급 시간",
-  exp: "토큰 만료 시간",
-  
-  // 기타 정보
-  aud: "클라이언트 ID",
-  iss: "토큰 발급자 (일반적으로 'accounts.google.com')",
-  azp: "인증된 당사자",
-  jti: "JWT ID (고유 식별자)"
-}
-   */
 };
 
 const naverLogin = async (req, res, next) => {
-  debugReqConsolePrint(req);
-  log.notice("네이바");
+  const payload = req.body.payload;
+  // email,nickname,profileImage,age,gender,id,name,birthday,idToken
 
-  res.status(201).json({});
+  // 1. 해당 이메일로 가입된 사용자가 있는지 확인
+  let existingUser = await UserData.findOne({ user_email: payload.email });
+
+  if (existingUser) {
+    // 이미 가입된 사용자인 경우, 로그인 처리리
+    debugVariablePrint(existingUser);
+    if (existingUser.login_type != "Naver") {
+      return next(
+        new HttpError(
+          "이미 있는 회원가입된 Email 은 소셜 회원가입을 할 수 없습니다.",
+          421
+        )
+      );
+    }
+    /** JWT 토큰 발행 */
+    let token;
+    try {
+      token = jwt.sign(
+        {
+          dbObjectId: existingUser.id,
+          userEmail: existingUser.user_email,
+        },
+        process.env.JWT_PRIVATE_KEY,
+        { expiresIn: HALF_ONE_MONTH }
+      );
+
+      return res.status(201).json({
+        dbObjectId: existingUser.id,
+        token: token,
+      });
+    } catch (err) {
+      log.error(`에러 스택: ${err.stack}`);
+      return next(
+        new HttpError("토큰 생성 에러 [ 서버 에러 : 토큰 에러 ]", 500)
+      );
+    }
+  }
+//-------------------------------------------------------------------------------
+  // 새로운 사용자인 경우, 회원가입처리
+  let hashedPassword;
+  let tempEmailPassword = nodemailer.generateTempPassword();
+  try {
+    /** 가입하려는 password 암호화 */
+    hashedPassword = await bcrypt.hash(tempEmailPassword, 12);
+  } catch (err) {
+    log.error(`에러 스택: ${err.stack}`);
+    return next(new HttpError("비밀번호 암호화 실패", 500));
+  }
+
+  const createdUser = new UserData({
+    user_name: payload.name,
+    user_email: payload.email,
+    login_type: "Naver",
+    password: hashedPassword,
+    home_address: "Naver 로그인",
+    phone_number: "01011111111",
+    device_list: [],
+    // google_id: googleId,
+  });
+
+  /** 회원 정보 DB Create*/
+  try {
+    await createdUser.save();
+  } catch (err) {
+    log.error(`에러 스택: ${err.stack}`);
+    return next(
+      new HttpError(`Sighing Up failed, please try again ${err}`, 500)
+    );
+  }
+
+  /** JWT 토큰 발행 */
+  let token;
+  try {
+    token = jwt.sign(
+      {
+        dbObjectId: createdUser.id,
+        userEmail: createdUser.user_email,
+      },
+      process.env.JWT_PRIVATE_KEY,
+      { expiresIn: HALF_ONE_MONTH }
+    );
+  } catch (err) {
+    log.error(`에러 스택: ${err.stack}`);
+    return next(new HttpError("토큰 생성 에러 [ 서버 에러 : 토큰 에러 ]", 500));
+  }
+
+  res.status(201).json({
+    dbObjectId: createdUser.id,
+    token: token,
+  });
 };
 
 const kakaoLogin = async (req, res, next) => {
