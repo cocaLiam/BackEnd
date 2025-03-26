@@ -20,22 +20,25 @@ const app = express();
 // const allowedOrigins = ['http://localhost:3000', 'https://app.cocabot.com', 'https://cocabot-backendprod-edfd59f6ff11.herokuapp.com/'];
 // 아래는 CORS 설정 부분입니다. Client에서 API를 호출하는 Origin(출처) 제한 설정
 const allowedOrigins = [
-  "http://localhost:3000",        // Client의 Local Web 환경에서 오는 요청 허용
-  "http://192.168.45.196:3000",   // Client의 Local App 환경에서 오는 요청 허용
-  "https://cocabot.com",          // 배포된 Web에서 오는 요청 허용
-  "https://nid.naver.com",        // 네이버 OAuth를 위한 요청 허용
-  "https://app.cocabot.com",      // 배포된 하이브리드 앱에서 오는 요청 허용
+  "http://localhost:3000", // Client의 Local Web 환경에서 오는 요청 허용
+  "http://192.168.45.196:3000", // Client의 Local App 환경에서 오는 요청 허용
+  "https://cocabot.com", // 배포된 Web에서 오는 요청 허용
+  "https://nid.naver.com", // 네이버 OAuth를 위한 요청 허용
+  "https://app.cocabot.com", // 배포된 하이브리드 앱에서 오는 요청 허용
 ];
 
 const corsOptions = {
   origin: function (origin, callback) {
-    log.info("CORS 요청 Origin:", origin); // 요청 Origin 로그 출력
+    console.log("1111111111111111");
+    console.log("CORS 요청 Origin:", origin); // 요청 Origin 로그 출력
     if (allowedOrigins.includes(origin) || !origin) {
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));
     }
   },
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // 허용 메서드 추가
+  credentials: true, // 자격 증명 허용 (필요시 추가)
 };
 
 app.use(cors(corsOptions));
