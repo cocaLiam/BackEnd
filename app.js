@@ -18,13 +18,15 @@ const app = express();
 
 // CORS 설정
 // const allowedOrigins = ['http://localhost:3000', 'https://app.cocabot.com', 'https://cocabot-backendprod-edfd59f6ff11.herokuapp.com/'];
+// 아래는 CORS 설정 부분입니다. Client에서 API를 호출하는 Origin(출처) 제한 설정
 const allowedOrigins = [
-  "https://nid.naver.com",
-  "http://localhost:3000",
-  "https://cocabot.com",
-  "https://cocabot.com/login/Login",
-  "https://app.cocabot.com",
-  "http://192.168.45.196:3000",
+  "http://localhost:3000",        // Client의 Local Web 환경에서 오는 요청 허용
+  "http://192.168.45.196:3000",   // Client의 Local App 환경에서 오는 요청 허용
+  "https://cocabot.com",          // 배포된 Web에서 오는 요청 허용
+  "https://nid.naver.com",        // 네이버 OAuth를 위한 요청 허용
+  "https://app.cocabot.com",      // 배포된 하이브리드 앱에서 오는 요청 허용
+  "https://cocabot.com/login/KakaoLoginPage", // 카카오 로그인 페이지 추가
+  "https://cocabot.com/src/pages/login/NaverLoginCallback.html" // 네이버 로그인 콜백 페이지 추가
 ];
 
 const corsOptions = {
