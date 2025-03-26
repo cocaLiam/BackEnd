@@ -29,17 +29,20 @@ const allowedOrigins = [
   "https://cocabot.com/src/pages/login/NaverLoginCallback.html" // 네이버 로그인 콜백 페이지 추가
 ];
 
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (allowedOrigins.includes(origin) || !origin) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-};
+// const corsOptions = {
+//   origin: function (origin, callback) {
+//     if (allowedOrigins.includes(origin) || !origin) {
+//       callback(null, true);
+//     } else {
+//       callback(new Error("Not allowed by CORS"));
+//     }
+//   },
+// };
 
-app.use(cors(corsOptions));
+// app.use(cors(corsOptions));
+
+app.use(cors());
+
 
 console.log("CORS 허용 링크 : ", JSON.stringify(allowedOrigins, null, 2));
 
