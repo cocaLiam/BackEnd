@@ -25,24 +25,20 @@ const allowedOrigins = [
   "https://cocabot.com",          // 배포된 Web에서 오는 요청 허용
   "https://nid.naver.com",        // 네이버 OAuth를 위한 요청 허용
   "https://app.cocabot.com",      // 배포된 하이브리드 앱에서 오는 요청 허용
-  "https://cocabot.com/login/KakaoLoginPage", // 카카오 로그인 페이지 추가
-  "https://cocabot.com/src/pages/login/NaverLoginCallback.html" // 네이버 로그인 콜백 페이지 추가
 ];
 
-// const corsOptions = {
-//   origin: function (origin, callback) {
-//     if (allowedOrigins.includes(origin) || !origin) {
-//       callback(null, true);
-//     } else {
-//       callback(new Error("Not allowed by CORS"));
-//     }
-//   },
-// };
+const corsOptions = {
+  origin: function (origin, callback) {
+    log.info("CORS 요청 Origin:", origin); // 요청 Origin 로그 출력
+    if (allowedOrigins.includes(origin) || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+};
 
-// app.use(cors(corsOptions));
-
-app.use(cors());
-
+app.use(cors(corsOptions));
 
 console.log("CORS 허용 링크 : ", JSON.stringify(allowedOrigins, null, 2));
 
