@@ -18,7 +18,14 @@ const app = express();
 
 // CORS 설정
 // const allowedOrigins = ['http://localhost:3000', 'https://app.cocabot.com', 'https://cocabot-backendprod-edfd59f6ff11.herokuapp.com/'];
-const allowedOrigins = ["https://nid.naver.com", "http://localhost:3000", "https://cocabot.com", "https://app.cocabot.com", "http://192.168.45.196:3000", ];
+const allowedOrigins = [
+  "https://nid.naver.com",
+  "http://localhost:3000",
+  "https://cocabot.com",
+  "https://cocabot.com/login/Login",
+  "https://app.cocabot.com",
+  "http://192.168.45.196:3000",
+];
 
 const corsOptions = {
   origin: function (origin, callback) {

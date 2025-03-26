@@ -18,21 +18,21 @@ const log = require("../util/logger");
 const myCache = new NodeCache();
 
 function debugReqConsolePrint(req) {
-  console.log("======= DEBUG LOG =======");
+  console.log("======= DEBUG LOG(BODY CHECK) =======");
   console.log("1. Raw req.body:", req.body);
   console.log(`2. req.body type: ${Object.prototype.toString.call(req.body)}`);
   console.log("3. req.body keys:", Object.keys(req.body));
   console.log("4. stringified body:", JSON.stringify(req.body));
   console.log("5. dbObjectId:", req.body?.dbObjectId);
-  console.log("======= DEBUG LOG =======");
+  console.log("======= DEBUG LOG(BODY CHECK) =======");
 }
 
 function debugVariablePrint(someVar) {
-  console.log("======= DEBUG LOG =======");
-  console.log("1. Raw req.body:", someVar);
-  console.log(`2. req.body type: ${Object.prototype.toString.call(someVar)}`);
-  console.log("3. stringified body:", JSON.stringify(someVar, null, 2));
-  console.log("======= DEBUG LOG =======");
+  console.log("======= DEBUG LOG(value Check) =======");
+  console.log("1. Value:", someVar);
+  console.log(`2. Value Type: ${Object.prototype.toString.call(someVar)}`);
+  console.log("3. Value Data:", JSON.stringify(someVar, null, 2));
+  console.log("======= DEBUG LOG(value Check) =======");
 }
 
 const HALF_ONE_MONTH = 60 * 60 * 24 * 15;
@@ -232,7 +232,7 @@ const googleLogin = async (req, res, next) => {
     if (existingUser.login_type != "Google") {
       return next(
         new HttpError(
-          "이미 있는 회원가입된 Email 은 소셜 회원가입을 할 수 없습니다.",
+          `${existingUser.login_type} < 해당 소셜 로그인으로 이미 가입된 Email 입니다.`,
           421
         )
       );
@@ -328,7 +328,7 @@ const naverLogin = async (req, res, next) => {
     if (existingUser.login_type != "Naver") {
       return next(
         new HttpError(
-          "이미 있는 회원가입된 Email 은 소셜 회원가입을 할 수 없습니다.",
+          `${existingUser.login_type} < 해당 소셜 로그인으로 이미 가입된 Email 입니다.`,
           421
         )
       );
@@ -412,9 +412,99 @@ const naverLogin = async (req, res, next) => {
 };
 
 const kakaoLogin = async (req, res, next) => {
-  // debugReqConsolePrint(req);
+  const payload = req.body.payload;
+  // email,nickname,profileImage,age,gender,id,name,birthday,idToken
+  debugReqConsolePrint(req)
 
-  res.status(201).json({});
+  // 1. 해당 이메일로 가입된 사용자가 있는지 확인
+  let existingUser = await UserData.findOne({ user_email: payload.email });
+  if (existingUser) {
+    // 이미 가입된 사용자인 경우, 로그인 처리리
+    debugVariablePrint(existingUser);
+    if (existingUser.login_type != "Kakao") {
+      return next(
+        new HttpError(
+          `${existingUser.login_type} < 해당 소셜 로그인으로 이미 가입된 Email 입니다.`,
+          421
+        )
+      );
+    }
+    /** JWT 토큰 발행 */
+    let token;
+    try {
+      token = jwt.sign(
+        {
+          dbObjectId: existingUser.id,
+          userEmail: existingUser.user_email,
+        },
+        process.env.JWT_PRIVATE_KEY,
+        { expiresIn: HALF_ONE_MONTH }
+      );
+
+      return res.status(201).json({
+        dbObjectId: existingUser.id,
+        token: token,
+      });
+    } catch (err) {
+      log.error(`에러 스택: ${err.stack}`);
+      return next(
+        new HttpError("토큰 생성 에러 [ 서버 에러 : 토큰 에러 ]", 500)
+      );
+    }
+  }
+//-------------------------------------------------------------------------------
+  // 새로운 사용자인 경우, 회원가입처리
+  let hashedPassword;
+  let tempEmailPassword = nodemailer.generateTempPassword();
+  try {
+    /** 가입하려는 password 암호화 */
+    hashedPassword = await bcrypt.hash(tempEmailPassword, 12);
+  } catch (err) {
+    log.error(`에러 스택: ${err.stack}`);
+    return next(new HttpError("비밀번호 암호화 실패", 500));
+  }
+
+  const createdUser = new UserData({
+    user_name: payload.name,
+    user_email: payload.email,
+    login_type: "Kakao",
+    password: hashedPassword,
+    home_address: "Kakao 로그인",
+    phone_number: "01011111111",
+    device_list: [],
+    // google_id: googleId,
+  });
+
+  /** 회원 정보 DB Create*/
+  try {
+    await createdUser.save();
+  } catch (err) {
+    log.error(`에러 스택: ${err.stack}`);
+    return next(
+      new HttpError(`Sighing Up failed, please try again ${err}`, 500)
+    );
+  }
+
+  /** JWT 토큰 발행 */
+  let token;
+  try {
+    token = jwt.sign(
+      {
+        dbObjectId: createdUser.id,
+        userEmail: createdUser.user_email,
+      },
+      process.env.JWT_PRIVATE_KEY,
+      { expiresIn: HALF_ONE_MONTH }
+    );
+  } catch (err) {
+    log.error(`에러 스택: ${err.stack}`);
+    return next(new HttpError("토큰 생성 에러 [ 서버 에러 : 토큰 에러 ]", 500));
+  }
+
+  res.status(201).json({
+    dbObjectId: createdUser.id,
+    token: token,
+  });
 };
 
 exports.verifyEmail = verifyEmail;
