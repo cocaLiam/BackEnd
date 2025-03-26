@@ -17,17 +17,28 @@ const app = express();
 // // uploads/images 라는 경로에 있는 파일들을 반환가능하게 함
 
 
-const corsOptions = {
-  origin: [
-    'http://localhost:3000',
-    'https://cocabot.com',
-    'https://nid.naver.com',
-    'https://app.cocabot.com'
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-}
+const whitelist = [
+  'http://localhost:3000',
+  'https://cocabot.com',
+  'https://nid.naver.com',
+  'https://app.cocabot.com',
+];
 
+// CORS 설정
+const corsOptions = {
+  origin: function (origin, callback) {
+    console.log(`CORS origin : ${origin}`);
+    if (!origin || whitelist.includes(origin)) {
+      // 허용된 출처인 경우
+      callback(null, true);
+    } else {
+      // 허용되지 않은 출처인 경우
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+};
+
+// CORS 미들웨어 추가
 app.use(cors(corsOptions));
 
 
@@ -78,6 +89,9 @@ app.use(cors(corsOptions));
 // };
 
 // app.use(cors(corsOptions));
+
+
+
 
 // app.use(bodyParser.urlencoded());  // Form Data 전용 : HTML 폼 ( ex) name=John&age=30 )
 app.use(bodyParser.json()); // Json Data 전용 : JSON 형식 ( ex) {"name": "John", "age": 30} )
