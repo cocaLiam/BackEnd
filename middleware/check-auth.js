@@ -30,6 +30,7 @@ module.exports = (req, res, next) => {
     const decodedToken = jwt.verify(token, process.env.JWT_PRIVATE_KEY);
     log.debug(`Token 유효 시간 : ${((decodedToken.exp) - (decodedToken.iat))} 초`);
     log.debug(`Token 종료 시간 : ${new Date(decodedToken.exp * 1000).toLocaleString()}`);
+    log.debug(`요청 URL : ${req.url}`)
     if (!decodedToken) {
       return next(new HttpError(
         "Authentication failed! [유효하지 않은 토큰]", 401
@@ -42,7 +43,7 @@ module.exports = (req, res, next) => {
       userEmail: decodedToken.userEmail
     };
     next();
-
+    
   } catch (err) {
     if (err instanceof jwt.TokenExpiredError) {
       log.warn(`토큰 유효 시간 종료`);

@@ -10,7 +10,6 @@ const DeviceInfo = require("../models/device_info");
 const log = require("../util/logger");
 const dbUtils = require("../util/dbUtils");
 const ValidationError = require("mongoose/lib/error/validation");
-const { checkProps } = require("../util/codeHelperUtils");
 
 // const getUsers = async (req, res, next) => {
 //   let users;
@@ -44,7 +43,7 @@ const signup = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     log.error("사용자 입력값 Validation Error ↓ ");
-    debugReqConsolePrint(req)
+    debugReqConsolePrint(req);
     res.status(422);
     return next(
       new HttpError("사용자 입력값 유효하지 않음\n 비밀번호 6글자 이상", 422)
@@ -52,7 +51,7 @@ const signup = async (req, res, next) => {
   }
 
   const { userName, userEmail, password, homeAddress, phoneNumber } = req.body;
-  let hashedPassword=""
+  let hashedPassword = "";
 
   /** 이미 존재 하는 Email 인지 체크 */
   let existingUser;
@@ -85,10 +84,10 @@ const signup = async (req, res, next) => {
   }
 
   const createdUser = new UserData({
-    user_name   : userName,
-    user_email  : userEmail,
+    user_name: userName,
+    user_email: userEmail,
     login_type: "Email",
-    password    : hashedPassword,
+    password: hashedPassword,
     home_address: homeAddress,
     phone_number: phoneNumber,
     device_list: [],
@@ -129,7 +128,7 @@ const signup = async (req, res, next) => {
 };
 
 const login = async (req, res, next) => {
-  log.info("LOGIN 시도 ... ")
+  log.info("LOGIN 시도 ... ");
   const { userEmail, password } = req.body;
 
   let existingUser;
@@ -228,6 +227,7 @@ const getUserInfo = async (req, res, next) => {
   // 클라이언트에 password 제외한 정보 반환
   let userInfo = {};
   if (existingUser.user_name) userInfo.userName = existingUser.user_name;
+  if (existingUser.login_type) userInfo.loginType = existingUser.login_type;
   if (existingUser.user_email) userInfo.userEmail = existingUser.user_email;
   if (existingUser.home_address)
     userInfo.homeAddress = existingUser.home_address;
@@ -295,7 +295,12 @@ const createGroup = async (req, res, next) => {
     );
 
     if (existingUser.device_group_list.includes(createTargetGroupName)) {
-      return next(new HttpError(`${createTargetGroupName}은 이미 존재하는 Group 명입니다.`, 409));
+      return next(
+        new HttpError(
+          `${createTargetGroupName}은 이미 존재하는 Group 명입니다.`,
+          409
+        )
+      );
     }
 
     existingUser.device_group_list.push(createTargetGroupName);
@@ -332,7 +337,6 @@ const createGroup = async (req, res, next) => {
 const updateGroup = async (req, res, next) => {
   const { dbObjectId, currentGroup, updateTargetGroupName } = req.body;
 
-
   let existingUser;
   // MongoDB 세션 시작
   const session = await mongoose.startSession();
@@ -347,7 +351,12 @@ const updateGroup = async (req, res, next) => {
     );
 
     if (existingUser.device_group_list.includes(updateTargetGroupName)) {
-      return next(new HttpError(`${updateTargetGroupName}은 이미 존재하는 Group 명입니다.`, 409));
+      return next(
+        new HttpError(
+          `${updateTargetGroupName}은 이미 존재하는 Group 명입니다.`,
+          409
+        )
+      );
     }
 
     if (!existingUser.device_group_list.includes(currentGroup)) {
@@ -393,28 +402,34 @@ const updateGroup = async (req, res, next) => {
 };
 
 const updateUserInfo = async (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    log.error("사용자 입력값 Validation Error ↓ ");
+    debugReqConsolePrint(req);
+    // res.status(422);
+    // return next(
+    //   new HttpError("사용자 입력값 유효하지 않음\n 비밀번호 6글자 이상", 422)
+    // );
+    let errorMessages = "";
+    errors.array().forEach((error, index) => {
+        errorMessages += `${index + 1}. ${error.msg} \n`; // 번호 추가 및 이중 줄바꿈
+    });
+    log.notice(errorMessages);
+    return next( new HttpError(errorMessages,422));
+  }
+  
   const {
-    dbObjectId,
     userName,
+    loginType,
     userEmail,
     newPassword,
-    password,
     homeAddress,
     phoneNumber,
   } = req.body;
+  const dbObjectId = req.tokenData.dbObjectId;
 
   let hashedPassword;
   let existingUser;
-
-  if (
-    !(
-      checkProps(req.body, ["dbObjectId"]) && checkProps(req.body, ["password"])
-    )
-  ) {
-    return next(
-      new HttpError("dbObjectId, password Props data 누락 문제", 400)
-    );
-  }
 
   /** DB 찾기 에러 */
   try {
@@ -428,31 +443,14 @@ const updateUserInfo = async (req, res, next) => {
       );
     }
 
-    try {
-      /** DB에 있는 암호화된 Password를 비교 */
-      const isValidPassword = await bcrypt.compare(
-        password.toString().trim(),
-        existingUser.password
-      );
-
-      if (isValidPassword) {
-        // 비밀번호가 동일한 경우 PASS
-        if(newPassword){
-          // newPssword 가 있으면 비밀번호 변경경
-          try {
-            hashedPassword = await bcrypt.hash(newPassword, 12);
-          } catch (err) {
-            log.error(`에러 스택: ${err.stack}`);
-            return next(new HttpError("비밀번호 암호화 실패", 500));
-          }
-        }
-      } else {
-        return next(new HttpError("비밀번호가 틀립니다.", 403));
+    if (newPassword) {
+      // newPssword 가 있으면 비밀번호 변경
+      try {
+        hashedPassword = await bcrypt.hash(newPassword, 12);
+      } catch (err) {
+        log.error(`에러 스택: ${err.stack}`);
+        return next(new HttpError("비밀번호 암호화 실패", 500));
       }
-    } catch (bcryptError) {
-      log.error(`에러 스택: ${err.stack}`);
-      log.error("bcrypt 에러:", bcryptError);
-      return next(new HttpError("비밀번호 검증 중 오류가 발생했습니다.", 500));
     }
 
     let userInfo = {};
@@ -473,9 +471,85 @@ const updateUserInfo = async (req, res, next) => {
 
   hashedPassword
     ? (result.password = "비밀번호 변경 성공")
-    : (result.password = "비밀번호를 변경하지 않음음");
+    : (result.password = "비밀번호를 변경하지 않음");
+
   res.json({ result: result });
 };
+
+// const updateUserInfo = async (req, res, next) => {
+//   const {
+//     dbObjectId,
+//     userName,
+//     userEmail,
+//     newPassword,
+//     password,
+//     homeAddress,
+//     phoneNumber,
+//   } = req.body;
+
+//   let hashedPassword;
+//   let existingUser;
+
+//   /** DB 찾기 에러 */
+//   try {
+//     existingUser = await dbUtils.findOneByField(UserData, "_id", dbObjectId);
+//     //# DB 상에 해당 Email 이 없으면 existingUser 이 null 값
+
+//     /** 일치하는 Email이 없는 경우 */
+//     if (!existingUser) {
+//       return next(
+//         new HttpError("DB에 해당 Email의 Object Id가 없습니다.", 404)
+//       );
+//     }
+
+//     try {
+//       /** DB에 있는 암호화된 Password를 비교 */
+//       const isValidPassword = await bcrypt.compare(
+//         password.toString().trim(),
+//         existingUser.password
+//       );
+
+//       if (isValidPassword) {
+//         // 비밀번호가 동일한 경우 PASS
+//         if (newPassword) {
+//           // newPssword 가 있으면 비밀번호 변경
+//           try {
+//             hashedPassword = await bcrypt.hash(newPassword, 12);
+//           } catch (err) {
+//             log.error(`에러 스택: ${err.stack}`);
+//             return next(new HttpError("비밀번호 암호화 실패", 500));
+//           }
+//         }
+//       } else {
+//         return next(new HttpError("비밀번호가 틀립니다.", 403));
+//       }
+//     } catch (bcryptError) {
+//       log.error(`에러 스택: ${err.stack}`);
+//       log.error("bcrypt 에러:", bcryptError);
+//       return next(new HttpError("비밀번호 검증 중 오류가 발생했습니다.", 500));
+//     }
+
+//     let userInfo = {};
+//     // 값이 있는 필드만 userInfo 추가
+//     if (userName) userInfo.user_name = userName;
+//     if (userEmail) userInfo.user_email = userEmail;
+//     if (hashedPassword) userInfo.password = hashedPassword;
+//     if (homeAddress) userInfo.home_address = homeAddress;
+//     if (phoneNumber) userInfo.phone_number = phoneNumber;
+
+//     result = await dbUtils.updateByField(UserData, "_id", dbObjectId, userInfo);
+//   } catch (err) {
+//     log.error(`에러 스택: ${err.stack}`);
+//     return next(
+//       new HttpError("업데이트 할 수 없습니다. [ 서버 에러 : DB query ] ", 500)
+//     );
+//   }
+
+//   hashedPassword
+//     ? (result.password = "비밀번호 변경 성공")
+//     : (result.password = "비밀번호를 변경하지 않음음");
+//   res.json({ result: result });
+// };
 
 const deleteGroupInfo = async (req, res, next) => {
   const { deleteTargetGroupName, dbObjectId } = req.body;

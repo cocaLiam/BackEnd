@@ -227,7 +227,7 @@ const googleLogin = async (req, res, next) => {
   let existingUser = await UserData.findOne({ user_email: payload.email });
 
   if (existingUser) {
-    // 이미 가입된 사용자인 경우, 로그인 처리리
+    // 이미 가입된 사용자인 경우, 로그인 처리
     debugVariablePrint(existingUser);
     if (existingUser.login_type != "Google") {
       return next(
@@ -277,8 +277,8 @@ const googleLogin = async (req, res, next) => {
     user_email: payload.email,
     login_type: "Google",
     password: hashedPassword,
-    home_address: "Google 로그인",
-    phone_number: "01011111111",
+    home_address: "",
+    phone_number: "010-1234-5678",
     device_list: [],
     // google_id: googleId,
   });
@@ -323,7 +323,7 @@ const naverLogin = async (req, res, next) => {
   let existingUser = await UserData.findOne({ user_email: payload.email });
 
   if (existingUser) {
-    // 이미 가입된 사용자인 경우, 로그인 처리리
+    // 이미 가입된 사용자인 경우, 로그인 처리
     debugVariablePrint(existingUser);
     if (existingUser.login_type != "Naver") {
       return next(
@@ -373,8 +373,8 @@ const naverLogin = async (req, res, next) => {
     user_email: payload.email,
     login_type: "Naver",
     password: hashedPassword,
-    home_address: "Naver 로그인",
-    phone_number: "01011111111",
+    home_address: "",
+    phone_number: "010-1234-5678",
     device_list: [],
     // google_id: googleId,
   });
@@ -419,7 +419,7 @@ const kakaoLogin = async (req, res, next) => {
   // 1. 해당 이메일로 가입된 사용자가 있는지 확인
   let existingUser = await UserData.findOne({ user_email: payload.email });
   if (existingUser) {
-    // 이미 가입된 사용자인 경우, 로그인 처리리
+    // 이미 가입된 사용자인 경우, 로그인 처리
     debugVariablePrint(existingUser);
     if (existingUser.login_type != "Kakao") {
       return next(
@@ -469,8 +469,8 @@ const kakaoLogin = async (req, res, next) => {
     user_email: payload.email,
     login_type: "Kakao",
     password: hashedPassword,
-    home_address: "Kakao 로그인",
-    phone_number: "01011111111",
+    home_address: "",
+    phone_number: "010-1234-5678",
     device_list: [],
     // google_id: googleId,
   });
