@@ -205,7 +205,7 @@ const deleteDeviceInfo = async (req, res, next) => {
     const result = await dbUtils.deleteByField(
       DeviceInfo,
       "_id",
-      existingDevice._id,
+    existingDevice._id,
       session
     );
     if (result.deletedCount === 0) {

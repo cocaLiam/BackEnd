@@ -83,7 +83,7 @@ const deleteByField = async (targetTable, field, value, session = undefined) => 
     }
     return result; // 삭제 결과 반환
   } catch (error) {
-    throw new HttpError(`디바이스 삭제 중 오류 발생: ${error}`, 500);
+    throw new HttpError(`디바이스 삭제 중 오류 발생: ${error.stack}`, 500);
   }
 };
 

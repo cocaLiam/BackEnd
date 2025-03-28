@@ -43,6 +43,17 @@ router.get(process.env.API_USER_INFO, usersControllers.getUserInfo);
 //   ],
 //   usersControllers.getUserInfo);
 
+router.delete(
+  process.env.API_USER_DELETE_USER,
+  [
+    check("userEmail")
+      .normalizeEmail() // Test@test.com => test@test.com
+      .isEmail(), //  @xxx.xxx 유무
+    check("password").isLength({ min: 6 }),
+  ],
+  usersControllers.deleteUser
+);
+
 router.post(
   process.env.API_USER_REFRESH_TOKEN,
   [check("dbObjectId").not().isEmpty()],
@@ -74,33 +85,35 @@ router.patch(
     check("userName")
       .optional()
       .matches(/^[가-힣a-zA-Z\s]{2,20}$/)
-      .withMessage('이름은 2~20자의 한글, 영문, 공백만 허용됩니다'),
+      .withMessage("이름은 2~20자의 한글, 영문, 공백만 허용됩니다"),
 
     check("loginType")
       .optional()
-      .isIn(['Kakao', 'Google', 'Naver'])
-      .withMessage('올바른 로그인 타입이 아닙니다'),
+      .isIn(["Kakao", "Google", "Naver", "email"])
+      .withMessage("올바른 로그인 타입이 아닙니다"),
 
-    check("userEmail")
-      .optional()
-      .normalizeEmail()
-      .isEmail()
-      .withMessage('올바른 이메일 형식이 아닙니다'),
+    // check("userEmail") << userEmail 은 변경 불가로 수정
+    //   .optional()
+    //   .normalizeEmail()
+    //   .isEmail()
+    //   .withMessage("올바른 이메일 형식이 아닙니다"),
 
     check("newPassword")
       .optional()
       .matches(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d!@#$%^&*(),.?":{}|<>]{6,20}$/)
-      .withMessage('비밀번호는 영문자와 숫자를 포함하여 6~20자여야 합니다'),
+      .withMessage("비밀번호는 영문자와 숫자를 포함하여 6~20자여야 합니다"),
 
     check("homeAddress")
-      .not().isEmpty()
+      .not()
+      .isEmpty()
       .matches(/^[가-힣a-zA-Z0-9\s,-]{2,100}$/)
-      .withMessage('주소는 한글, 영문, 숫자, 공백, 쉼표, 하이픈만 허용됩니다'),
+      .withMessage("주소는 한글, 영문, 숫자, 공백, 쉼표, 하이픈만 허용됩니다"),
 
     check("phoneNumber")
-      .not().isEmpty()
+      .not()
+      .isEmpty()
       .matches(/^(\d{2,3}-\d{3,4}-\d{4}|\d{10,11})$/)
-      .withMessage('전화번호 형식이 올바르지 않습니다 (예: 010-1234-5678)'),
+      .withMessage("전화번호 형식이 올바르지 않습니다 (예: 010-1234-5678)"),
   ],
   usersControllers.updateUserInfo
 );

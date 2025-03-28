@@ -44,7 +44,6 @@ const signup = async (req, res, next) => {
   if (!errors.isEmpty()) {
     log.error("사용자 입력값 Validation Error ↓ ");
     debugReqConsolePrint(req);
-    res.status(422);
     return next(
       new HttpError("사용자 입력값 유효하지 않음\n 비밀번호 6글자 이상", 422)
     );
@@ -190,7 +189,7 @@ const login = async (req, res, next) => {
   //   message: 'Logged in',
   //   user: existingUser.toObject({ getters: true })
   // });
-  res.json({
+  res.status(201).json({
     dbObjectId: existingUser.id,
     token: token,
   });
@@ -266,7 +265,7 @@ const refreshToken = async (req, res, next) => {
       { expiresIn: HALF_ONE_MONTH }
     );
 
-    res.json({
+    res.status(201).json({
       message: "토큰이 갱신되었습니다.",
       newToken: newToken,
     });
@@ -330,6 +329,92 @@ const createGroup = async (req, res, next) => {
   if (existingUser.device_list) userInfo.deviceList = existingUser.device_list;
   if (existingUser.device_group_list)
     userInfo.deviceGroupList = existingUser.device_group_list;
+
+  res.status(201).json({ userInfo: userInfo }); // userInfo 변수를 반환
+};
+
+const deleteUser = async (req, res, next) => {
+  const { userEmail, password } = req.body;
+  const dbObjectId = req.tokenData.dbObjectId;
+  debugReqConsolePrint(req);
+  // MongoDB 세션 시작
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    // 1. Email 검사 (dbObjectId 와 동일한지까지)
+    const userInfo = await dbUtils.findOneByField(
+      UserData,
+      "user_email",
+      userEmail,
+      session
+    );
+
+    if (!userInfo) {
+      return next(new HttpError(`없는 Email 입니다.`, 421));
+    }
+
+    const checkData = await dbUtils.findOneByField(
+      UserData,
+      "_id",
+      dbObjectId,
+      session
+    );
+    if (userInfo.user_email != checkData.user_email) {
+      return next(new HttpError(`ObjectId 와 Email이 틀립니다.`, 421));
+    }
+
+    // 1. password 검사
+    const isValidPassword = await bcrypt.compare(
+      password.toString().trim(),
+      userInfo.password
+    );
+
+    if (!isValidPassword) {
+      return next(new HttpError("비밀번호가 틀립니다.", 403));
+    }
+
+    const deviceList = await dbUtils.findAllByField(
+      DeviceInfo,
+      "device_owner",
+      dbObjectId,
+      session
+    );
+
+    for (const tmp of deviceList) {
+      log.notice(tmp);
+      log.notice(tmp._id);
+      const result = await dbUtils.deleteByField(
+        DeviceInfo,
+        "_id",
+        tmp._id,
+        session
+      );
+      log.notice(result);
+    }
+
+    await dbUtils.deleteByField(UserData, "user_email", userEmail, session);
+
+    // 5. 트랜잭션 커밋
+    await session.commitTransaction();
+  } catch (err) {
+    log.error(`에러 스택: ${err.stack}`);
+    // 트랜잭션 롤백
+    await session.abortTransaction();
+
+    return next(
+      new HttpError(
+        `해당 메일 : ${userEmail} 삭제 중 오류가 발생했습니다.`,
+        500
+      )
+    );
+  } finally {
+    log.warn("삭제 성공 디바이쓰까지")
+    session.endSession();
+  }
+
+  let userInfo = {};
+  if (userEmail) userInfo.userEmail = userEmail;
 
   res.status(201).json({ userInfo: userInfo }); // userInfo 변수를 반환
 };
@@ -406,22 +491,18 @@ const updateUserInfo = async (req, res, next) => {
   if (!errors.isEmpty()) {
     log.error("사용자 입력값 Validation Error ↓ ");
     debugReqConsolePrint(req);
-    // res.status(422);
-    // return next(
-    //   new HttpError("사용자 입력값 유효하지 않음\n 비밀번호 6글자 이상", 422)
-    // );
     let errorMessages = "";
     errors.array().forEach((error, index) => {
-        errorMessages += `${index + 1}. ${error.msg} \n`; // 번호 추가 및 이중 줄바꿈
+      errorMessages += `${index + 1}. ${error.msg} \n`; // 번호 추가 및 이중 줄바꿈
     });
     log.notice(errorMessages);
-    return next( new HttpError(errorMessages,422));
+    return next(new HttpError(errorMessages, 422));
   }
-  
+
   const {
     userName,
     loginType,
-    userEmail,
+    // userEmail, << userEmail 은 변경 불가로 수정
     newPassword,
     homeAddress,
     phoneNumber,
@@ -456,7 +537,7 @@ const updateUserInfo = async (req, res, next) => {
     let userInfo = {};
     // 값이 있는 필드만 userInfo 추가
     if (userName) userInfo.user_name = userName;
-    if (userEmail) userInfo.user_email = userEmail;
+    // if (userEmail) userInfo.user_email = userEmail;  << userEmail 은 변경 불가로 수정
     if (hashedPassword) userInfo.password = hashedPassword;
     if (homeAddress) userInfo.home_address = homeAddress;
     if (phoneNumber) userInfo.phone_number = phoneNumber;
@@ -473,7 +554,7 @@ const updateUserInfo = async (req, res, next) => {
     ? (result.password = "비밀번호 변경 성공")
     : (result.password = "비밀번호를 변경하지 않음");
 
-  res.json({ result: result });
+  res.status(201).json({ result: result });
 };
 
 // const updateUserInfo = async (req, res, next) => {
@@ -635,6 +716,7 @@ const deleteGroupInfo = async (req, res, next) => {
 exports.signup = signup;
 exports.login = login;
 exports.getUserInfo = getUserInfo;
+exports.deleteUser = deleteUser;
 exports.refreshToken = refreshToken;
 exports.createGroup = createGroup;
 exports.updateGroup = updateGroup;
