@@ -334,7 +334,8 @@ const createGroup = async (req, res, next) => {
 };
 
 const deleteUser = async (req, res, next) => {
-  const { userEmail, password } = req.body;
+  // const { userEmail, password } = req.body;
+  const { userEmail } = req.body;
   const dbObjectId = req.tokenData.dbObjectId;
   debugReqConsolePrint(req);
   // MongoDB 세션 시작
@@ -364,15 +365,16 @@ const deleteUser = async (req, res, next) => {
       return next(new HttpError(`ObjectId 와 Email이 틀립니다.`, 421));
     }
 
-    // 1. password 검사
-    const isValidPassword = await bcrypt.compare(
-      password.toString().trim(),
-      userInfo.password
-    );
+    // 소셜로그인의 경우 password가 따로 없어서 password 검사 코드 제거
+    // // 1. password 검사
+    // const isValidPassword = await bcrypt.compare(
+    //   password.toString().trim(),
+    //   userInfo.password
+    // );
 
-    if (!isValidPassword) {
-      return next(new HttpError("비밀번호가 틀립니다.", 403));
-    }
+    // if (!isValidPassword) {
+    //   return next(new HttpError("비밀번호가 틀립니다.", 403));
+    // }
 
     const deviceList = await dbUtils.findAllByField(
       DeviceInfo,
@@ -409,7 +411,6 @@ const deleteUser = async (req, res, next) => {
       )
     );
   } finally {
-    log.warn("삭제 성공 디바이쓰까지")
     session.endSession();
   }
 

@@ -49,7 +49,7 @@ router.delete(
     check("userEmail")
       .normalizeEmail() // Test@test.com => test@test.com
       .isEmail(), //  @xxx.xxx 유무
-    check("password").isLength({ min: 6 }),
+    // check("password").isLength({ min: 6 }),
   ],
   usersControllers.deleteUser
 );
