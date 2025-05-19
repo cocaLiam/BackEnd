@@ -6,6 +6,8 @@ ___
 #### 
 # BackEnd 구성 overview
 #### 
+- 프레임 워크는 기본적으로 MERN스택을 따름
+  - 프론트엔드(React) + 백엔드(Node.js/Express) + 데이터베이스(MongoDB)
 - NodeJS -- Express -- JS
 - MVC 패턴 (model–view–controller, MVC)
 - mongoose (mongoDB), (cloud Server DB : Atlas)
